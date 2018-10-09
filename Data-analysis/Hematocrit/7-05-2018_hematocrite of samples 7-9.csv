@@ -1,0 +1,63 @@
+Sample,F,Abs(280.0),Abs(421.0),Abs(600.0),Abs(700.0)
+Tube6, ,0,0,0,0
+ ,R,0,0,0,0
+ ,R,0,0,0,0
+Tube7, ,0,0,0,0
+ ,R,0,0,0,0
+ ,R,0,0,0,0
+Tube8, ,0,0,0,0
+ ,R,0,0,0,0
+ ,R,0,0,0,0
+Results Flags Legend,,,,,
+ ,,,,,
+R = Repeat reading, ,,,,
+Zero Report,,,,,
+Read,Abs (280.0 nm),Abs (421.0 nm),Abs (600.0 nm),Abs (700.0 nm),
+Cell 7,0.2754,0.0623,0.0524,0.0382,
+Cell 8,0.2631,0.0672,0.0565,0.0421,
+Cell 9,0.2943,0.0662,0.0549,0.0404,
+Zero Report,,,,,
+Read,Abs (280.0 nm),Abs (421.0 nm),Abs (600.0 nm),Abs (700.0 nm),
+Cell 7,0.2753,0.0622,0.0522,0.0382,
+Cell 8,0.2634,0.0673,0.0566,0.0422,
+Cell 9,0.2939,0.0662,0.0549,0.0405,
+Read sequence cancelled,,,,,
+Advanced Reads Report,,,,,
+ ,,,,,
+Report time,7/5/2018 17:16,,,,
+Method,C:\Users\Admin\Desktop\Methods\Multiple Plasma composition - Clifton.MAB,,,,
+Batch name, ,,,,
+Application,Advanced Reads 5.0.0.999,,,,
+Operator, ,,,,
+Instrument Settings,,,,,
+ ,,,,,
+Instrument,Cary 60,,,,
+Instrument version no.,2,,,,
+Wavelength (nm),280,,,,
+Ordinate Mode,Abs,,,,
+Ave Time (sec),0.25,,,,
+Replicates,3,,,,
+Sample averaging,OFF,,,,
+Cell changer,ON,,,,
+Zero Report,,,,,
+Read,Abs (280.0 nm),Abs (421.0 nm),Abs (600.0 nm),Abs (700.0 nm),
+Cell 7,0.2753,0.0622,0.0522,0.0382,
+Cell 8,0.2634,0.0673,0.0566,0.0422,
+Cell 9,0.2939,0.0662,0.0549,0.0405,
+ , ,,,,
+Analysis,,,,,
+ ,,,,,
+Collection time,7/5/2018 17:16,,,,
+Sample,F,Abs(280.0),Abs(421.0),Abs(600.0),Abs(700.0)
+Tube7,R,1.3368,1.0193,0.585,0.5535
+ ,R,1.3389,1.0189,0.5862,0.5554
+ ,R,1.3446,1.0272,0.5904,0.5601
+Tube8,R,1.3892,1.1915,0.79,0.7508
+ ,R,1.3941,1.1964,0.7887,0.7489
+ ,R,1.3958,1.2001,0.7877,0.7462
+Tube9, ,1.1917,0.7945,0.4564,0.4331
+ ,R,1.1943,0.7962,0.4575,0.4341
+ ,R,1.1965,0.7977,0.4586,0.4356
+Results Flags Legend,,,,,
+ ,,,,,
+R = Repeat reading, ,,,,

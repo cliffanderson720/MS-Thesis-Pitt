@@ -1,0 +1,89 @@
+---
+title: 'Supporting Information: Contact angle statistics'
+author: "Clifton Anderson"
+date: "July 2, 2018"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(xlsx)
+library(car)
+
+
+```
+
+## Plots and ANOVA results
+
+A model was fitted to consider the effects of (1) Drop location, (2) Liquid, and (3) the plasma treatment.
+
+```{r Data importing and manipulating}
+
+raw <- read.xlsx2('contact angles.xlsx',sheetIndex=1,colClasses = NA)
+printed <- raw[raw$Finish!='PP',]
+ggplot(printed,aes(x=Location,y=avg))+geom_point()+facet_grid(Liquid ~ Treatment)
+
+raw$CoatingType <- raw$Treatment 
+# Collapse the factor levels into the type of treatment
+levels(raw$CoatingType) <- list(plasma=c('blown3min.1', 'blown3min.2',
+                                         'quick.dry', 'plas_coated'),
+                                clean= c('as is', 'clean', 'etoh_ace', 'washed',
+                                         'wiped', 'wiped_etoh_ace', 'wiped_water'),
+                                paa=   c('paa'),
+                                support=c('support'))
+
+TreatmentSum <- filter(raw,!Treatment %in% c('as is', 'plas_coated', 'paa', 'support', 'wiped_water') &
+                         !Finish %in% c('glass','matte'))
+TreatmentSum %>% group_by(CoatingType,Finish,Liquid) %>%
+  summarise(n=n(),
+            Contact.Angle=mean(avg),
+            SD = sd(avg),
+            'Cos(theta)'=cos(3.14159/180*Contact.Angle)) %>%
+  knitr::kable(.,caption='contact angle of water and plasma on clean and plasma coated surfaces')
+
+```
+
+```{r ANOVA stuff}
+drops <- raw
+drops$Location <- factor(drops$Location)
+drop.aov <- aov(avg ~ Location + Liquid + Treatment + Location*Liquid + Location*Treatment + Liquid*Treatment, data=drops)
+summary(drop.aov)
+```
+
+None of the effects including 'Location' are significant, suggesting surface treatments were sufficiently homogeneous.
+
+
+```{r drop.aov assumptions}
+leveneTest(avg ~ Location*Liquid*Treatment,data=drops)
+plot(drop.aov,2)
+```  
+
+## Plasma coating t-tests
+hi
+```{r plasma coating t-tests}
+SS <- subset(raw,Time=='SS' & Finish=='glossy' & Treatment != 'paa')
+SS %>% 
+  filter(.,Treatment!='clean'& Treatment != 'wiped',Liquid=='plasma') %>%
+  pairwise.t.test(.$avg,.$Treatment,data=.,pool.sd=FALSE,p.adj='bonf')
+```
+
+```{r PP coating tests}
+PP <- raw[raw$Finish=='PP',]
+PP %>% group_by(Treatment,Liquid) %>% summarise(n=n(),Angle=mean(avg),SD=sd(avg),Conf95=SD/sqrt(n)*qt(0.95,df=n-1),'Cos'=cos(Angle*3.14159/180))
+ggplot(PP,aes(Treatment,avg,color=Liquid)) + geom_jitter(width=0.25)
+
+```
+
+```{r coating on printed vs glossy}
+coatings <- subset(raw,Treatment %in% c('blown3min.1','blown3min.2','plas_coated','quick.dry'))
+
+ggplot(coatings,aes(Treatment,avg,color=Liquid))+geom_point() + facet_wrap(~Finish)
+```
+
+```{r wetting thoughts}
+SS %>% group_by(Treatment,Liquid) %>% summarise(n=n(),Angle=mean(avg),SD=sd(avg),Conf95=SD/sqrt(n)*qt(0.95,df=n-1),'Cos'=cos(Angle*3.14159/180))
+```

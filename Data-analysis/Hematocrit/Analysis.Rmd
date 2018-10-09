@@ -1,0 +1,23 @@
+---
+title: "Hematocrit"
+author: "Clifton Anderson"
+date: "July 26, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Hematocrit from gravity vs centrifuge
+I'm try to find the packing factor of the red blood cells by comparing the apparent hematocrit when settled by gravity and by centrifuge.
+I made 6 suspensions of different hematocrit (spinning samples). I filled a capillary tube all the way with the suspensions and capped both ends of the tube
+I Let that tube sit in the fridge for 20 hours and measured the height of the liquid and the height of the cell pack. The hematocrit is the ratio between them.
+Then, I put super glue on the bottom of those tubes (to prevent pushing out the putty plug) and centrifuged them and remeasured the hematocrit.
+
+* Tube 6 broke in the tube.
+
+```{r Graphs}
+
+```
+

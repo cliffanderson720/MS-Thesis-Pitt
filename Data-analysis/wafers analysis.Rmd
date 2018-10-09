@@ -1,0 +1,147 @@
+---
+title: "Wafer analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2);library(dplyr);library(xlsx)
+require(stats)
+require(graphics)
+setwd('J:/groups/bloodfilter/CliftonAnderson')
+```
+
+# Wafer explanation
+I printed wafers to test 2 factors:
+Cutout half-angle: None (0), 20, 50, 70
+Cutout depth: None (0), 0.05 inch, 0.025 inch
+Wafer finish: glossy, matte
+
+```{r wafer Importing and data manipulating}
+wafers <- read.xlsx('wafers.xlsx',colClasses = NA,sheetIndex=2)
+wafers$WaferID <- paste(wafers$Ruffle,wafers$Depth,sep='')
+wafers$WaferID <- as.factor(wafers$WaferID)
+levels(wafers$WaferID) <- c('0.00','0.05','20.025','20.05','50.025','50.05','70.025','70.05')
+with(wafers,{table(Treatment,Finish,Liquid)})
+
+
+wafers$TreatmentType <- wafers$Treatment
+levels(wafers$TreatmentType) <- list(paa=c("paa.10min","paa.30min","paa.5min"),
+                                     peo=c("peo-meoh-0.4","peo-meoh-3.4","peo-w"),
+                                     plasma=c("plasma.coated"),
+                                     support=c('support','wash1'),
+                                     clean='clean')
+
+
+```
+#### Summary of raw data
+This is a graph of allll the data that has been taken. Messy to look at.
+```{r Summary plotting, include=FALSE}
+ggplot(wafers,aes(as.factor(Depth),Angle,shape=as.factor(Ruffle),color=Liquid))+
+  geom_jitter(width=0.15)+
+  facet_grid(Finish ~ Treatment)
+```
+
+
+## Poly(ethylene oxide) coatings
+I coated the wafers with poly(ethylene oxide) (a.k.a. poly(ethylene glycol)) with a $M_v = 100000$ to see if a coating would increase the hydrophilicity of the weir and encourage flowdown. I coated the wafers with PEO dissolved separately in water (wt% unknown) and in methanol ($0.4% and 3.4 wt%$). (The plots of peo-water are not displayed here. see code.)
+
+```{r peo-water plotting, eval=FALSE, include=FALSE}
+Ratios <- filter(wafers,Treatment=='peo-w')
+ggplot(Ratios,aes(Cycle,Ratio,color=as.factor(Depth),shape=as.factor(Ruffle)))+
+  geom_jitter(width=0.15)
+```
+
+#### Procedure
+Steps 2-5 were completed 7 times for each wafer and are denoted as a "cycle".
+
+1. coated the wafer with a polymer solution and let it dry (10 min - 2 hours).
+2. I placed 250 $\mu L$ water in the headspace of the wafer and caused the liquid to barely wet the ruffles using my pipet tip. I slowly tilted the wafer for the liquid to flow down the ruffles and measured the angle at which the liquid front moved at a constant rate.
+3. After the angle was measured, I used the side of the pipet tip to spread the water over all un-wetted regions of the wafer.
+4. I let the water sit for at least 10s.
+5. Then, the water was blown off the wafer using compressed air for at least 30s. 
+
+Rolldown angles for each run wafer and run are shown below. A graph summarizing the overall results is shown below that one.
+
+
+```{r peo-meoh}
+PEOmeoh <- wafers[grepl('meoh',wafers$Treatment) &
+                    wafers$Finish=='glossy',]
+
+ggplot(PEOmeoh,aes(x=Cycle,y=Angle,color=WaferID))+
+  geom_point()+
+  geom_line()+
+  facet_wrap(Replicate~Treatment,ncol=2)+
+  ggtitle('Roll-down angle on PEO-coated disks')
+```
+
+
+```{r PEO-meoh Summary plotting }
+PEOsum <- PEOmeoh[PEOmeoh$Cycle<8,] %>% group_by(WaferID,Cycle) %>% summarise(n=n(),mean = mean(Angle),sd = sd(Angle),se=sd/sqrt(n))
+
+ggplot(PEOsum,aes(Cycle,mean,color=WaferID))+
+  geom_point()+
+  geom_line()+
+  geom_errorbar(aes(ymin=mean-se,ymax=mean+se),na.rm=TRUE)+
+  facet_wrap(~WaferID,ncol=4)+
+  ylab('Inclination angle')+ggsave('PEO_coating_summary.png')
+
+```
+
+## Ruffle dimensions
+Instead of looking at the angles and depth, I'll look at the peak-to-peak distance and the cross-sectional area of the ruffles because those factors should affect the liquid directly. A table is shown below with the distance between ruffle peaks in centimeters.
+```{r transformation}
+wafers$PeakDist <- 2*wafers$Depth*tan(wafers$Ruffle*3.1415/180)*2.54
+# have to include this as a factor because 0.00 and 0.05 have the same peak distance
+PeakDistf <- c(0.000,0.000,0.046,0.092,0.151,0.302,0.348,0.698) 
+
+
+wafers$TroughPerim <- 2*wafers$Depth/cos(wafers$Ruffle*3.14159/180)*2.54
+wafers[wafers$TroughPerim == 0.254,]$TroughPerim <- 0
+TroughPerimf <- as.numeric(c(0,levels(as.factor(wafers$TroughPerim))))
+
+data.frame(waferID=levels(wafers$WaferID),'W/2d'=PeakDistf/TroughPerimf)
+
+
+
+RuffleType <- data.frame(ID=levels(wafers$WaferID),PeakDistance_cm=PeakDistf)
+RuffleType
+```
+The distance between ruffles is less than a millimeter for the 20 degree wafers. For 50 and 70 $^{\circ}$s, The peak distance steadily increases.
+
+## Capillary length calculations:
+The formula for capillary length is $\lambda = \sqrt{\frac{\gamma_{LV}}{\rho g}}$ where $\gamma_{LV}$ and $\rho$ are the surface tension and density of the liquid, and $g$ is the gravitational constant. The capillary length for plasma is approximately $0.21 cm$.
+
+The 20 $^{\circ}$ ruffles wick the liquid into the channels because they are smaller than the capillary length.
+
+
+
+
+
+
+
+### Statistical tests
+I want to see if the ruffle depth really affects the angle for a clean surface
+
+```{r statistical tests}
+clean <- subset(wafers,Finish=='glossy'&Liquid=='water'&Depth!=0 & Treatment=='clean')
+clean.aov <- aov(Angle ~ Depth, data=clean)
+summary(clean.aov)
+plot(clean.aov,2)
+table(clean$Ruffle,clean$Depth)
+
+with(clean,{
+  pairwise.t.test(Angle,Depth,alternative='less')})
+means <- group_by(wafers,Depth + Ruffle) %>%
+  summarize(.,count=n(),angle=mean(Angle),se = sd(Angle)/sqrt(count))
+means
+
+```
+
+``` {r peo-coatings}
+Wafer20.05 <- wafers[wafers$Ruffle==20 & wafers$Depth==0.05,]
+ggplot(Wafer20.05,aes(Treatment,Angle,color=Liquid))+
+  geom_jitter(width=0.25)+
+  ggtitle('Rolldown angles of wafer 20.05')+
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+```

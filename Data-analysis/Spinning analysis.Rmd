@@ -1,0 +1,156 @@
+---
+title: "Spinning"
+author: "Clifton Anderson"
+date: "July 24, 2018"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(latex2exp)
+library(xlsx)
+library(ggplot2)
+library(dplyr)
+library(magrittr)
+library(forcats)
+library(broom)
+library(tidyr)
+```
+
+## Results from spinning whole blood on ruffled disks
+Here is a table of how many replicates have been done on each disk. The columns tell if the hematocrit of the whole blood was measured or not.
+
+
+```{r Importing and manipulating data, echo=FALSE}
+spins <- read.xlsx2("J:/groups/bloodfilter/CliftonAnderson/Spinning.xlsx",sheetIndex = 2,colClasses=NA)
+spins$HCT_plas[1] <- NaN
+spins$g_trough[1] <- NaN
+spins$g_wiped[1] <- NaN
+spins$Baffles  <- grepl('16b',spins$Disk)
+spins$Glossy   <- grepl('glossy',spins$Disk)
+spins$VolWB  <- 7.0 + (spins$Trough.Volume-4)*(7.0/8.5) %>% round(.,2)
+spins$VolPBS <- 1.5 + (spins$Trough.Volume-4)*(1.5/8.5) %>% round(.,2)
+#spins$Trough.Volume <- as.factor(spins$Trough.Volume)
+table(spins$Disk,!is.na(spins$HCT))
+```
+## RBC and plasma recovery
+I have calculated the plasma recovery and red cell recovery using the following steps. I need to calculate the volume of the flowdown. If I chose not to dilute my blood with PBS, I would have a binary mixture of plasma and RBCs. Since I'm adding PBS though, I have a ternary mixture and cannot use the reference plasma density of 1024 $kg/m^3$. Because I can only obtain the volume fraction of red blood cells in the flowdown, I have an extra degree of freedom. To remove this, I will simplify this system back to binary by making a composite (i.e. solution) density between PBS and plasma as a function of their volumes.
+$$ m_{solution} = \rho_{PBS}V_{PBS} + \rho_{plasma}(1-HCT_{whole\;blood})V_{whole\;blood}$$
+$$ \rho_{solution} = \frac{m_{solution}}{V_{whole\;blood}(1-HCT_{whole\;blood})+V_{PBS}} $$
+The volume fraction of plasma in solution is
+$$\nu_{plasma} = \frac{V_{whole\;blood}(1-HCT_{whole\;blood})}{V_{whole\;blood}(1-HCT_{whole\;blood})+V_{PBS}}$$
+The mass of the flowdown is measured directly. It can be represented as a ternary mixture $\sum{\rho_{i}V_{i}}, \;\;i=WB, plasma, PBS$ or as a binary mixture using the $\rho_{solution}$ just calculated. This latter approach will be used for the remainder of the derivation.
+$$ m_{flowdown} = \rho_{solution}V_{solution}+\rho_{RBC}V_{RBC} $$
+Moving to the next step require the intermediate values: $V_{solution} = V_{flowdown}(1-HCT_{flowdown})$ and $V_{RBC} = V_{flowdown}HCT_{flowdown}$. Substituting these values into the equation above yields:
+
+
+$$ m_{flowdown} = V_{flowdown}[\rho_{solution}(1-HCT_{flowdown})+\rho_{RBC}HCT_{whole\;blood}] $$
+
+A simple rearrangement gives $V_{flowdown}$ in the following expression:
+
+$$ V_{flowdown} = \frac{m_{flowdown}}{\rho_{solution}(1-HCT_{plasma})+\rho_{RBC}HCT_{whole\;blood}} $$
+Now the Plasma and RBC recoveries can be calculated
+$$Plasma \; Recovery \;(\%)  = \frac{\nu_{plasma}V_{flowdown}(1-HCT_{flowdown})}{V_{PBS} + V_{whole\;blood}(1-HCT_{whole \;blood})}*100$$
+
+$$ RBC \; Recovery \;(\%) = \frac{V_{flowdown}HCT_{flowdown}}{V_{whole\;blood}HCT_{whole\;blood}}*100$$
+
+```{r plasma recovery}
+Temp = 23 #C
+rho_PBS <- -5.2037e-6*Temp^2 - 8.1463e-6*Temp + 1.0097 
+# I got this correlation from
+# (http://www.sciencedirect.com/science/article/pii/S003991400400373X)
+
+spins$VolFracPlasma  <- with(spins,{VolWB*(1-HCT)/(VolWB*(1-HCT) + VolPBS)})
+spins$RhoSolution    <- with(spins,{(rho_PBS*VolPBS + 1.024*(1-HCT)*VolWB)/(VolPBS + (1-HCT)*VolWB)})
+spins$VFlowdown      <- with(spins,{gplas_tot/(RhoSolution*(1-HCT_plas)+1.093*HCT_plas)})
+spins[is.na(spins$HCT_plas),]$VFlowdown <- spins[is.na(spins$HCT_plas),]$gplas_tot/1.024
+# Some disks have missing HCT_plasma values. For these disks, I approximate the density of the
+# flowdown as that of pure plasma. This lets me keep these data with little introduced error.
+
+spins$RBCRecovery    <- with(spins,{VFlowdown*VolFracPlasma*HCT_plas/(VolWB*HCT)*100})
+spins$PlasmaRecovery <- with(spins,{VFlowdown*(1-HCT_plas)/(VolPBS+VolWB*(1-HCT))*100})
+```
+
+
+```{r Plotting, echo=FALSE}
+ggplot(spins,aes(Disk,PlasmaRecovery,color=Glossy))+
+  geom_jitter(width=0.05,na.rm=TRUE)+
+  theme(axis.text.x = element_text(angle=45,hjust=1))+
+  ggtitle('Plasma recovery (%)')
+#  aes(x = fct_reorder(Disk,PlasmaRecovery,.desc=TRUE))
+
+ggplot(spins,aes(Disk,RBCRecovery,color=Glossy))+
+  geom_jitter(width=0.05,na.rm=TRUE)+
+  theme(axis.text.x = element_text(angle=45,hjust=1))+
+  ggtitle('RBC recovery (%)')
+
+ggplot(spins,aes(Disk,gplas_tot,shape=Glossy,color=HCT_plas))+
+  geom_jitter(width=0.05,na.rm=TRUE)+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  ggtitle('Total mass of flowdown')+
+  ylim(1.7,5)
+```
+The reason most of the glossy disks have higher plasma recovery is because the flowdown is more predictable. With the matte ones, the same maximum flowdown is possible, but the rough surface presents an energy barrier, so a column of liquid with a given force has a lower chance of beating the threshold. 
+
+```{r summary of spins, echo=FALSE}
+spinsum <- spins %>% group_by(Disk) %>% summarise(n=n(), 'Flowdown (g)'=mean(gplas_tot), sd=sd(gplas_tot), se=sd/sqrt(n), ci = qt(0.95,n-1)*se)
+knitr::kable(spinsum,caption='Mass of flowdown by disk')
+```
+
+# Effect of Hematocrit and trough volume
+```{r RBC relationship to trough volume - plotting}
+RealVol <- function(x){
+       if (x==3){return(x*0.8)}
+  else if (x==4){return(x*0.9)}
+  else if (x==5){return(x*0.8)}
+  else {print('failed')}}
+
+spins$Trough.Volume.real <- RealVol(spins$Trough.Volume)
+
+spins$Vol_RBC2Trough <- with(spins,{((HCT*VolWB)/0.85-Trough.Volume)})
+spins$HCT_Disk_calc <- with(spins,{(HCT*VolWB-HCT_plas*(VFlowdown))/Trough.Volume})
+spins$Ordinate <- with(spins,{HCT*VolWB-HCT_plas*VFlowdown})
+spins$Vol_Plasma2Trough <- with(spins,{VolWB*(1-HCT/0.8)-Trough.Volume})
+
+glossy <- spins[grepl('glossy',spins$Disk),]
+ruffles <- spins[grepl('16x3_glossy',spins$Disk),]
+
+ggplot(ruffles,aes(Trough.Volume,Ordinate))+
+  geom_jitter(aes(color=Disk))+
+  geom_smooth(method='lm',se=TRUE)
+
+ggplot(ruffles,aes(Vol_Plasma2Trough,PlasmaRecovery))+
+  geom_point(aes(color=HCT,shape=Disk))+
+  theme(axis.text.x = element_text(angle=45,hjust=1))
+
+rufflesum <- ruffles %>% select(.,HCT_Disk_calc,HCT,Disk) %>% na.omit() %>% group_by(Disk) %>% summarise(n=n(),Hmin=min(HCT_Disk_calc),Hmean=mean(HCT_Disk_calc),Hmax=max(HCT_Disk_calc),SD=sd(HCT_Disk_calc),SE=SD/sqrt(n))
+rufflesum
+
+ggplot(ruffles,aes(HCT,HCT_Disk_calc,color=factor(ruffles$RBCRecovery>0.7),shape=Disk))+
+  geom_point()+
+  ylim(NA,1)
+
+trough <- filter(ruffles,
+                 RBCRecovery>0.7,
+                 Disk %in% c('20.05_16x3_glossy_4mL',
+                             '20.05_16x3_glossy_3mL',
+                             '20.05_16x3_glossy_5mL'))
+
+ggplot(trough,aes(RBCRecovery,Vol_RBC2Trough,color=Disk))+
+  geom_point(na.rm=TRUE)+
+  geom_smooth(method='lm',se=FALSE,na.rm=TRUE)
+
+trough.lm <- lm(Vol_RBC2Trough ~ Disk/RBCRecovery-1,data=trough);summary(trough.lm)
+trough.aov <- aov(Vol_RBC2Trough ~ Disk*RBCRecovery,data=trough);summary(trough.aov)
+
+``` 
+The threshold ratio of Red cells to trough volume is not constant for the different trough volumes. I think that the 5mL tubes maybe relax more as the cells descend. 
+
+No correlation between "trough volume" and plasma recovery.
+Adding the volume of stuck flowdown doesn't change the disk hematocrit hardly at all.
+
+### Comparison of Trough hematocrit calculation to experimental
+The calcuated "Trough hematocrits" for 2 experiments on 20.05_16x3_glossy_5mL was `r filter(spins,as.Date(Date)=='2018-08-21', tube==1)$HCT_Disk_calc*100 %>% round(.,3)`, `r filter(spins,as.Date(Date)=='2018-08-21', tube==5)$HCT_Disk_calc*100 %>% round(.,3)`, and the measured values were 83 and 87. The calculated values are lower probably because it considers the whole disk as the trough; in reality, the red cells are more concentrated in the trough than in the flowdown region.
+
+_Even though all the disks spill over near t
