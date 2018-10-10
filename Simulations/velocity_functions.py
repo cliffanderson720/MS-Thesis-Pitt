@@ -200,6 +200,12 @@ def porosity(concs,power=1,radius_dict=radius):
     porosity = 1-np.nan_to_num((1+void_envelope/d_cells)**-3)
     return porosity**power
 
+def michaels(a,n,amax=0.95):
+    '''
+    Michaels bolger correction used in Lerche's 2001 paper.
+    '''
+    return (1-a)**2*(1-a/amax)**n
+
 
 #### Setting up concentration arrays to test the porosity function
 #conc1a = np.linspace(0,.25,51)
