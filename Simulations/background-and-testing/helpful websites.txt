@@ -1,0 +1,2 @@
+http://hplgit.github.io/primer.html/doc/pub/oo/._oo-readable003.html
+Explains using classes for numerical problems
