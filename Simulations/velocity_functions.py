@@ -101,7 +101,11 @@ def stokes(RPM,r,cell_radius,cell_density,rho_f=1024,visc=.0026,mode=None, **kwa
         
     return speeds
 
-
+# dimensional analysis of stokes function
+#var accel den radi visc total
+# m    1   -3   2    1     1
+# s   -2             1    -1
+#kg         1       -1     0
 
 def RZ(rho,umax,n,rhomax=1):
     return umax*(rhomax-rho)**n
