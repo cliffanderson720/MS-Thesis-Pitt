@@ -36,7 +36,7 @@ viscosity = {'plas':0.0026} # viscosity of plasma in kg/m s
 def stokesdict(RPM,r,radius_dict,density_dict,rho_f=1024,visc=.0026,mode=None):
     '''
     Calculates the stokes velocity in m/s for j particle types
-    
+    DEPRECATED - do not use dictionaries
     -------------------------------------------------------------------------
     Inputs: 
         RPM: scalar: revoluctions per minute
@@ -53,11 +53,9 @@ def stokesdict(RPM,r,radius_dict,density_dict,rho_f=1024,visc=.0026,mode=None):
     if all((type(radius_dict)==dict,type(density_dict)==dict)) == True:
         r_cell = np.array(list(radius_dict.values()))
         rho_i = np.array(list(density_dict.values()))
-#        print('this is a dictionary')
     else:
         r_cell = radius_dict
         rho_i = density_dict
-#        print('this is a float')
 
 
     if mode == 'gravity':
@@ -76,30 +74,38 @@ def stokes(RPM,r,cell_radius,cell_density,rho_f=1024,visc=.0026,mode=None, **kwa
     Calculates the stokes velocity in m/s for j particle types
     -------------------------------------------------------------------------
     Required inputs: 
-        RPM: scalar: revolutions per minute
-        r: ndarray length i: moment arm from the axis of rotation to the cell location (m)
-        r_dict: tuple of j cell radii (m)
-        rho_cell: tuple of j cell densities (kg/m3)
+        RPM: scalar:  revolutions per minute
+        r:  ndarray:  moment arm (len=i) from the axis of rotation to the
+                      cell location (m)
+        cell_radius:  tuple of j cell radii (m)
+        cell_density: tuple of j cell densities (kg/m3)
+    -------------------------------------------------------------------------        
     Optional inputs:
         mode: string: default None
-        Options: 'gravity' - currently not working
+                      options: 'gravity' - this returns an array of j speeds
+    -------------------------------------------------------------------------
     Output:
-        speed: ndarray (jxi): stokes velocity of j particle types at i spatial points
+        speed: ndarray (jxi): stokes velocity of j particle types 
+                              at i spatial points
     '''
-    omega = RPM*2*3.1415926353/60  # convert from revolutions per minute to radians/s
-    accel = r*omega**2
-
-    try:
-        ncells = len(cell_radius)
-        nspatial = len(r)
-        speeds = np.empty((ncells,nspatial))
-        for j in range(ncells):
-            speeds[j] = accel*(2*(cell_density[j]-rho_f)*cell_radius[j]**2)/(9*visc)
-
-    except TypeError:
-        speeds = accel*(2*(cell_density-rho_f)*cell_radius**2)/(9*visc)
+    # convert tuples to arrays for element-wise calculations
+    cell_radius  = np.array(cell_radius)
+    cell_density = np.array(cell_density)
+    
+    if mode=='gravity':
+        accel = 9.8 #m/s2
+        speed = accel*(2*(cell_density-rho_f)*cell_radius**2)/(9*visc)
+    else:
+        omega = RPM*2*3.1415926353/60  # convert from revolutions per minute to radians/s
+        accel = r*omega**2 # calculate radial acceleration
         
-    return speeds
+        ncells   = len(cell_radius)
+        nspatial = len(r)
+        speed = np.empty((ncells,nspatial))
+        for j in range(ncells):
+            speed[j,:] = accel*(2*(cell_density[j]-rho_f)*cell_radius[j]**2)/(9*visc)
+        
+    return speed
 
 # dimensional analysis of stokes function
 #var accel den radi visc total
@@ -116,7 +122,7 @@ def RZfluxprime(rho,umax,n,rhomax=1):
 def RZfluxprime2(rho,umax,n):
     '''
     Computes the derivative of the RZ volume flux. This expression was derived
-    in mid july 2018 by hand by Clifton Anderson.
+    in mid july 2018 by hand by Clifton Anderson. It is for an Engquist-Osher flux
     -------------------------------------------------------------------------
     inputs: 
         rho: n by j array of particle concentrations
@@ -185,7 +191,7 @@ def michaels(a,n,amax=0.95):
     Michaels bolger correction used in Lerche's 2001 paper.
     See Michaels function.py in background-and-testing for graphing code
     '''
-    return (1-a)**2*(1-a/amax)**n
+    return (1-a)**2*(1-a/amax)**(amax*n)
 
 def EOflux(rhos):
     '''
@@ -216,7 +222,7 @@ def van_wie_(Ctot,den,rad,S,visc):
     
     force   = S*omega**2*r     # centrifugal acceleration term    
     del_rho = (den-Psus)/(den-Plas['den']) # density gradient term
-    hinder  = np.exp(-2.5*Ctot/(1-39/64*Ctot)) # local concentration correction introduced by Hawley
+    hinder  = np.exp(-2.5*Ctot/(1-39/64*Ctot)) # local concentration correction introduced by Hawksley
     
     return force*del_rho*hinder
 
