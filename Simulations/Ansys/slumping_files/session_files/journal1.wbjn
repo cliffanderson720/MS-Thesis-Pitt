@@ -1,0 +1,454 @@
+﻿# encoding: utf-8
+# Release 18.1
+SetScriptVersion(Version="18.1.463")
+system1 = GetSystem(Name="Study")
+geometryModelingComponent1 = Study.CreateTask(
+    Type="Geometry Modeling",
+    System=system1)
+with Transaction():
+    meshingComponent1 = Study.CreateTask(
+        Type="Meshing",
+        System=system1,
+        Input=geometryModelingComponent1)
+    meshing1 = meshingComponent1.GetTaskObject()
+    meshing1.EngineeringIntent = "FluidFlow"
+    meshingComponent1.Refresh()
+    study1 = system1.GetContainer(ComponentName="Study")
+    meshControlLocalBoundaryLayer1 = study1.CreateEntity(
+        Type="MeshControlLocalBoundaryLayer",
+        Association=meshing1)
+    meshControlLocalBoundaryLayer1.MaximumLayers = 5
+    meshingComponent1.Refresh()
+    meshControlElementShape1 = study1.CreateEntity(
+        Type="MeshControlElementShape",
+        Association=meshing1)
+    meshControlElementShape1.Location = "AllBodies()"
+    meshControlElementShape1.Shape = "Tetrahedrons"
+    meshingComponent1.Refresh()
+    physicsDefinitionComponent1 = Study.CreateTask(
+        Type="Physics Definition",
+        System=system1,
+        Input=meshingComponent1)
+    physicsDefinitionComponent1.Refresh()
+    physicsDefinition1 = physicsDefinitionComponent1.GetTaskObject()
+    physicsDefinition1.CalculationType = "Static"
+    solverSettings1 = study1.CreateEntity(
+        Type="SolverSettings",
+        Association=physicsDefinition1)
+    solvePhysicsComponent1 = Study.CreateTask(
+        Type="Solve Physics",
+        System=system1,
+        Input=physicsDefinitionComponent1)
+    solvePhysicsComponent1.Refresh()
+    physicsSolutionGroup1 = Study.CreateGroup(Name="Physics Solution")
+    physicsSolutionGroup1.Add(Component=physicsDefinitionComponent1)
+    physicsSolutionGroup1.Add(Component=solvePhysicsComponent1)
+    physicsRegion1 = study1.CreateEntity(
+        Type="PhysicsRegion",
+        Association=physicsDefinition1)
+    physicsRegion1.PhysicsType = "Fluid"
+    physicsRegion1.Location = "AllBodies()"
+    materialAssignment1 = study1.CreateEntity(
+        Type="MaterialAssignment",
+        Association=physicsDefinition1)
+    material1 = study1.CreateEntity(
+        Type="Material",
+        Association=physicsDefinition1)
+    material1.ImportEngineeringData(Name="Air")
+    materialAssignment1.Material = material1
+    materialAssignment1.Location = [physicsRegion1]
+    physicsOptions1 = study1.GetPhysicsOptions(Name="PhysicsOptions 1")
+    physicsOptions1.TurbulenceModel.RANSModel.CurvatureCorrection = "Off"
+    transcript1 = study1.CreateEntity(
+        Type="Transcript",
+        Association=physicsDefinition1)
+    transcript1.DisplayText = "Fluid Flow Output 1"
+    resultsEvaluationComponent1 = Study.CreateTask(
+        Type="Results Evaluation",
+        System=system1,
+        Input=solvePhysicsComponent1)
+    AddSourceToComponentInSystem(
+        SourceComponent=physicsDefinitionComponent1,
+        TargetComponent=resultsEvaluationComponent1)
+    resultsEvaluationComponent1.Refresh()
+    results1 = resultsEvaluationComponent1.GetTaskObject()
+    vectorResult1 = study1.CreateEntity(
+        Type="VectorResult",
+        Association=results1)
+    vectorResult1.Variable = "Velocity"
+    modeling1 = geometryModelingComponent1.GetTaskObject()
+    Modeling.ReloadDocument(ModelingAnchor=modeling1)
+with Transaction():
+    geometryModelingComponent1.Update(AllDependencies=True)
+    meshingComponent1.Refresh()
+    physicsDefinitionComponent1.Refresh()
+    solvePhysicsComponent1.Refresh()
+    resultsEvaluationComponent1.Refresh()
+meshing1.MeshResolution = "2"
+meshControlLocalBoundaryLayer1.Location = ["FACE5"]
+meshControlLocalBoundaryLayer1.MaximumLayers = 0
+Study.Delete(Items=[meshControlLocalBoundaryLayer1])
+Study.Delete(Items=[meshControlElementShape1])
+meshControlLocalBoundaryLayer2 = study1.CreateEntity(
+    Type="MeshControlLocalBoundaryLayer",
+    Association=meshing1)
+Study.Delete(Items=[meshControlLocalBoundaryLayer2])
+with Transaction():
+    meshingComponent1.DeleteTask(System=system1)
+    physicsDefinitionComponent1.Refresh()
+    solvePhysicsComponent1.Refresh()
+    resultsEvaluationComponent1.Refresh()
+Modeling.ReloadDocument(ModelingAnchor=modeling1)
+geometryModelingComponent1.Update(AllDependencies=True)
+with Transaction():
+    meshingComponent2 = Study.CreateTask(
+        Type="Meshing",
+        System=system1,
+        Input=geometryModelingComponent1)
+    meshingComponent2.Refresh()
+meshing2 = meshingComponent2.GetTaskObject()
+meshing2.MeshResolution = "1"
+meshing2.EngineeringIntent = "FluidFlow"
+meshing2.MeshResolution = "4"
+meshingComponent2.Update(AllDependencies=True)
+meshControlLocalBoundaryLayer3 = study1.CreateEntity(
+    Type="MeshControlLocalBoundaryLayer",
+    Association=meshing2,
+    Location=["FACE5"])
+meshControlLocalBoundaryLayer3.Location = ["FACE5", "FACE3"]
+meshingComponent2.Update(AllDependencies=True)
+meshControlLocalBoundaryLayer4 = study1.CreateEntity(
+    Type="MeshControlLocalBoundaryLayer",
+    Association=meshing2)
+selectionSet1 = study1.CreateEntity(
+    Type="SelectionSet",
+    Association=meshing2,
+    Location=["FACE3"])
+meshControlLocalBoundaryLayer4.Location = [selectionSet1]
+Study.Delete(Items=[meshControlLocalBoundaryLayer3])
+meshingComponent2.Update(AllDependencies=True)
+with Transaction():
+    physicsSolutionGroup2 = Study.CreateGroup(Name="Physics Solution")
+    physicsDefinitionComponent2 = Study.CreateTask(
+        Type="Physics Definition",
+        System=system1)
+    solvePhysicsComponent2 = Study.CreateTask(
+        Type="Solve Physics",
+        System=system1)
+    physicsSolutionGroup2.Add(Component=physicsDefinitionComponent2)
+    physicsSolutionGroup2.Add(Component=solvePhysicsComponent2)
+    AddSourceToComponentInSystem(
+        SourceComponent=physicsDefinitionComponent2,
+        TargetComponent=solvePhysicsComponent2)
+    AddSourceToComponentInSystem(
+        SourceComponent=meshingComponent2,
+        TargetComponent=physicsDefinitionComponent2)
+    physicsDefinitionComponent2.Refresh()
+    solvePhysicsComponent2.Refresh()
+    physicsDefinition2 = physicsDefinitionComponent2.GetTaskObject()
+    physicsRegion2 = study1.CreateEntity(
+        Type="PhysicsRegion",
+        Association=physicsDefinition2)
+    solverSettings2 = study1.CreateEntity(
+        Type="SolverSettings",
+        Association=physicsDefinition2)
+    transcript2 = study1.CreateEntity(
+        Type="Transcript",
+        Association=physicsDefinition2)
+    physicsDefinitionComponent2.Refresh()
+    solvePhysicsComponent2.Refresh()
+with Transaction():
+    physicsRegion2.PhysicsType = "Fluid"
+    physicsRegion2.Location = [selectionSet1]
+physicsRegion2.Location = ["FACE8"]
+physicsRegion2.Location = [selectionSet1]
+Study.Delete(Items=[physicsRegion2])
+physicsRegion3 = study1.CreateEntity(
+    Type="PhysicsRegion",
+    Association=physicsDefinition2)
+Study.Delete(Items=[physicsRegion3])
+with Transaction():
+    physicsDefinitionComponent2.DeleteTask(System=system1)
+    solvePhysicsComponent2.DeleteTask(System=system1)
+    Study.DeleteTaskGroup(Group=physicsSolutionGroup2)
+selectionSet2 = study1.CreateEntity(
+    Type="SelectionSet",
+    Association=physicsDefinition1)
+physicsRegion1.Location = [selectionSet2]
+Study.Delete(Items=[selectionSet2])
+with Transaction():
+    physicsDefinitionComponent1.DeleteTask(System=system1)
+    solvePhysicsComponent1.DeleteTask(System=system1)
+    Study.DeleteTaskGroup(Group=physicsSolutionGroup1)
+    resultsEvaluationComponent1.Refresh()
+resultsEvaluationComponent1.DeleteTask(System=system1)
+with Transaction():
+    physicsSolutionGroup3 = Study.CreateGroup(Name="Physics Solution")
+    physicsDefinitionComponent3 = Study.CreateTask(
+        Type="Physics Definition",
+        System=system1)
+    solvePhysicsComponent3 = Study.CreateTask(
+        Type="Solve Physics",
+        System=system1)
+    physicsSolutionGroup3.Add(Component=physicsDefinitionComponent3)
+    physicsSolutionGroup3.Add(Component=solvePhysicsComponent3)
+    AddSourceToComponentInSystem(
+        SourceComponent=physicsDefinitionComponent3,
+        TargetComponent=solvePhysicsComponent3)
+    AddSourceToComponentInSystem(
+        SourceComponent=meshingComponent2,
+        TargetComponent=physicsDefinitionComponent3)
+    physicsDefinitionComponent3.Refresh()
+    solvePhysicsComponent3.Refresh()
+    physicsDefinition3 = physicsDefinitionComponent3.GetTaskObject()
+    physicsRegion4 = study1.CreateEntity(
+        Type="PhysicsRegion",
+        Association=physicsDefinition3)
+    solverSettings3 = study1.CreateEntity(
+        Type="SolverSettings",
+        Association=physicsDefinition3)
+    transcript3 = study1.CreateEntity(
+        Type="Transcript",
+        Association=physicsDefinition3)
+    physicsDefinitionComponent3.Refresh()
+    solvePhysicsComponent3.Refresh()
+physicsDefinition3.CalculationType = "TimeDependent"
+physicsRegion4.Location = [selectionSet1]
+Study.Delete(Items=[meshControlLocalBoundaryLayer4])
+with Transaction():
+    meshingComponent2.Update(AllDependencies=True)
+    physicsDefinitionComponent3.Refresh()
+    solvePhysicsComponent3.Refresh()
+with Transaction():
+    physicsSolutionGroup4 = Study.CreateGroup(Name="Physics Solution")
+    physicsDefinitionComponent4 = Study.CreateTask(
+        Type="Physics Definition",
+        System=system1)
+    solvePhysicsComponent4 = Study.CreateTask(
+        Type="Solve Physics",
+        System=system1)
+    physicsSolutionGroup4.Add(Component=physicsDefinitionComponent4)
+    physicsSolutionGroup4.Add(Component=solvePhysicsComponent4)
+    AddSourceToComponentInSystem(
+        SourceComponent=physicsDefinitionComponent4,
+        TargetComponent=solvePhysicsComponent4)
+    AddSourceToComponentInSystem(
+        SourceComponent=meshingComponent2,
+        TargetComponent=physicsDefinitionComponent4)
+    physicsDefinitionComponent4.Refresh()
+    solvePhysicsComponent4.Refresh()
+    physicsDefinition4 = physicsDefinitionComponent4.GetTaskObject()
+    physicsRegion5 = study1.CreateEntity(
+        Type="PhysicsRegion",
+        Association=physicsDefinition4)
+    solverSettings4 = study1.CreateEntity(
+        Type="SolverSettings",
+        Association=physicsDefinition4)
+    transcript4 = study1.CreateEntity(
+        Type="Transcript",
+        Association=physicsDefinition4)
+    physicsDefinitionComponent4.Refresh()
+    solvePhysicsComponent4.Refresh()
+with Transaction():
+    physicsDefinitionComponent3.DeleteTask(System=system1)
+    solvePhysicsComponent3.DeleteTask(System=system1)
+    Study.DeleteTaskGroup(Group=physicsSolutionGroup3)
+with Transaction():
+    physicsRegion5.PhysicsType = "Fluid"
+    physicsRegion5.Location = ["BODY1"]
+materialAssignment2 = study1.CreateEntity(
+    Type="MaterialAssignment",
+    Association=physicsDefinition4,
+    Location=[physicsRegion5])
+with Transaction():
+    material2 = study1.CreateEntity(
+        Type="Material",
+        Association=physicsDefinition4)
+    material2.ImportEngineeringData(Name="Water")
+    materialAssignment2.Material = material2
+inletCondition1 = study1.CreateEntity(
+    Type="InletBoundary",
+    Association=physicsRegion5)
+inletCondition1.Location = ["FACE7"]
+inletCondition1.Flow.Velocity.Magnitude = "0.01 [m s^-1]"
+outletCondition1 = study1.CreateEntity(
+    Type="OutletBoundary",
+    Association=physicsRegion5)
+outletCondition1.Location = ["FACE4"]
+outletCondition1.Flow.Pressure.GaugeStaticPressure = "0 [Pa]"
+wallCondition1 = study1.CreateEntity(
+    Type="WallBoundary",
+    Association=physicsRegion5)
+solvePhysicsComponent4.Update(AllDependencies=True)
+with Transaction():
+    resultsEvaluationComponent2 = Study.CreateTask(
+        Type="Results Evaluation",
+        System=system1)
+    AddSourceToComponentInSystem(
+        SourceComponent=physicsDefinitionComponent4,
+        TargetComponent=resultsEvaluationComponent2)
+    AddSourceToComponentInSystem(
+        SourceComponent=solvePhysicsComponent4,
+        TargetComponent=resultsEvaluationComponent2)
+    resultsEvaluationComponent2.Refresh()
+with Transaction():
+    results2 = resultsEvaluationComponent2.GetTaskObject()
+    streamLine1 = study1.CreateEntity(
+        Type="StreamLine",
+        Association=results2)
+    streamLine1.EvaluateFullRange = False
+streamLine1.Location = ["FACE8"]
+Study.EvaluateResult(Entity=streamLine1)
+streamLine1.UniformDistributionSize = "100"
+Study.EvaluateResult(Entity=streamLine1)
+with Transaction():
+    vectorResult2 = study1.CreateEntity(
+        Type="VectorResult",
+        Association=results2)
+    vectorResult2.EvaluateFullRange = False
+vectorResult2.Variable = "Velocity"
+vectorResult2.Evaluate()
+vectorResult2.Location = [inletCondition1]
+vectorResult2.Location = [outletCondition1]
+vectorResult2.Evaluate()
+vectorResult2.SymbolLength = "Constant"
+vectorResult2.SymbolLength = "BasedOnMagnitude"
+vectorResult2.Legend.Coloring = "Banded"
+vectorResult2.Legend.Coloring = "Smooth"
+Study.Delete(Items=[vectorResult2])
+Save(Overwrite=True)
+Modeling.ReloadDocument(ModelingAnchor=modeling1)
+template1 = GetTemplate(TemplateName="Fluid Flow")
+system2 = template1.CreateSystem()
+system2.Delete()
+system3 = template1.CreateSystem(
+    Position="Above",
+    RelativeTo=system1)
+geometry1 = system3.GetContainer(ComponentName="Geometry")
+geometry1.Edit(IsSpaceClaimGeometry=True)
+geometry1.Edit(IsSpaceClaimGeometry=True)
+geometry1.Exit()
+with Transaction():
+    geometryModelingComponent2 = Study.DuplicateTask(TaskComponent=geometryModelingComponent1)
+    geometryModelingComponent2.Refresh()
+geometryModelingComponent2.Update(AllDependencies=True)
+geometryModelingComponent2.DeleteTask(System=system1)
+Modeling.ReloadDocument(ModelingAnchor=modeling1)
+geometry1.Edit(IsSpaceClaimGeometry=True)
+geometry1.Exit()
+geometry1.SetFile(FilePath="J:/MS-Thesis-Pitt/Simulations/Ansys/slumping_files/dp0/Modeling/AIM/1D trough.scdoc")
+with Transaction():
+    meshComponent1 = system3.GetComponent(Name="Mesh")
+    meshComponent1.Refresh()
+    mesh1 = system3.GetContainer(ComponentName="Mesh")
+    mesh1.Edit()
+mesh1.Exit()
+Save(Overwrite=True)
+with Transaction():
+    setupComponent1 = system3.GetComponent(Name="Setup")
+    setupComponent1.Refresh()
+    setup1 = system3.GetContainer(ComponentName="Setup")
+    fluentLauncherSettings1 = setup1.GetFluentLauncherSettings()
+    fluentLauncherSettings1.SetEntityProperties(Properties=Set(Precision="Double", EnvPath={}))
+    setup1.Edit()
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list ))(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|General"))(cx-gui-do cx-set-toggle-button2 "General*Table1*Table2(Solver)*ToggleBox5(Time)*Transient" #t)(cx-gui-do cx-activate-item "General*Table1*Table2(Solver)*ToggleBox5(Time)*Transient")(cx-gui-do cx-set-toggle-button2 "General*Table1*Table3*CheckButton1(Gravity)" #t)(cx-gui-do cx-activate-item "General*Table1*Table3*CheckButton1(Gravity)")')
+setup1.SendCommand(Command="(cx-gui-do cx-activate-item \"General*PushButton4(parameter)\")(cx-gui-do cx-activate-item \"Select Input Parameter*Table1*PushButton4(New Parameter)\")(cx-gui-do cx-set-text-entry \"Input Parameter Properties*Table1*TextEntry1(Name)\" \"g0\")(cx-gui-do cx-set-real-entry-list \"Input Parameter Properties*Table1*RealEntry2(Current Value)\" '( -9.81))(cx-gui-do cx-activate-item \"Input Parameter Properties*Table1*RealEntry2(Current Value)\")(cx-gui-do cx-activate-item \"Input Parameter Properties*PanelButtons*PushButton1(OK)\")(cx-gui-do cx-activate-item \"Select Input Parameter*Table1*PushButton5(Use Constant)\")")
+setup1.SendCommand(Command="(cx-gui-do cx-activate-item \"General*PushButton4(parameter)\")(cx-gui-do cx-set-list-selections \"Select Input Parameter*Table1*List1(Parameters)\" '( 0))(cx-gui-do cx-activate-item \"Select Input Parameter*Table1*List1(Parameters)\")(cx-gui-do cx-activate-item \"Select Input Parameter*PanelButtons*PushButton1(OK)\")")
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "General*Table1*Table3*PushButton2(Units)")')
+setup1.SendCommand(Command="(cx-gui-do cx-set-list-selections \"Set Units*List1(Quantities)\" '( 2))(cx-gui-do cx-activate-item \"Set Units*List1(Quantities)\")(cx-gui-do cx-set-list-selections \"Set Units*Frame3*List1(Units)\" '( 2))(cx-gui-do cx-activate-item \"Set Units*Frame3*List1(Units)\")(cx-gui-do cx-set-list-selections \"Set Units*Frame3*List1(Units)\" '( 0))(cx-gui-do cx-activate-item \"Set Units*Frame3*List1(Units)\")(cx-gui-do cx-set-list-selections \"Set Units*Frame3*List1(Units)\" '( 2))(cx-gui-do cx-activate-item \"Set Units*Frame3*List1(Units)\")(cx-gui-do cx-activate-item \"Set Units*PanelButtons*PushButton2(Cancel)\")")
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "General*PushButton4(parameter)")(cx-gui-do cx-activate-item "Select Input Parameter*PanelButtons*PushButton2(Cancel)")')
+setup1.SendCommand(Command="(cx-gui-do cx-activate-item \"General*PushButton4(parameter)\")(cx-gui-do cx-activate-item \"Select Input Parameter*Table1*PushButton4(New Parameter)\")(cx-gui-do cx-activate-item \"Input Parameter Properties*PanelButtons*PushButton2(Cancel)\")(cx-gui-do cx-set-list-selections \"Select Input Parameter*Table1*List3(Used In:)\" '( 0))(cx-gui-do cx-activate-item \"Select Input Parameter*Table1*List3(Used In:)\")(cx-gui-do cx-activate-item \"Select Input Parameter*PanelButtons*PushButton1(OK)\")")
+setup1.SendCommand(Command='(cx-gui-do cx-set-toggle-button2 "General*Table1*Table3*CheckButton1(Gravity)" #f)(cx-gui-do cx-activate-item "General*Table1*Table3*CheckButton1(Gravity)")(cx-gui-do cx-set-toggle-button2 "General*Table1*Table3*CheckButton1(Gravity)" #t)(cx-gui-do cx-activate-item "General*Table1*Table3*CheckButton1(Gravity)")(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Models"))(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Models"))')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Models"))(cx-gui-do cx-activate-item "NavigationPane*List_Tree1")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Models"))')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Models*Table1*PushButton2(Edit)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-toggle-button2 "Multiphase Model*Table1*ToggleBox1(Model)*Volume of Fluid" #t)(cx-gui-do cx-activate-item "Multiphase Model*Table1*ToggleBox1(Model)*Volume of Fluid")(cx-gui-do cx-set-toggle-button2 "Multiphase Model*Table1*Table10(Options)*Table1(Interface Modeling)*ToggleBox1(Type)*Dispersed" #t)(cx-gui-do cx-activate-item "Multiphase Model*Table1*Table10(Options)*Table1(Interface Modeling)*ToggleBox1(Type)*Dispersed")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Multiphase Model*Table1*Table10(Options)*PushButton2(Expert Options)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Expert Options*PanelButtons*PushButton2(Cancel)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-integer-entry "Multiphase Model*Table1*Table2*IntegerEntry1(Number of Eulerian Phases)" 3)(cx-gui-do cx-activate-item "Multiphase Model*Table1*Table2*IntegerEntry1(Number of Eulerian Phases)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-integer-entry "Multiphase Model*Table1*Table2*IntegerEntry1(Number of Eulerian Phases)" 2)(cx-gui-do cx-activate-item "Multiphase Model*Table1*Table2*IntegerEntry1(Number of Eulerian Phases)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Multiphase Model*PanelButtons*PushButton1(OK)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Materials"))')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Materials"))(cx-gui-do cx-activate-item "NavigationPane*List_Tree1")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Materials"))(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Materials|Fluid"))')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Materials|Fluid"))(cx-gui-do cx-activate-item "NavigationPane*List_Tree1")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Materials|Fluid"))(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Materials|Fluid|air"))(cx-gui-do cx-list-tree-right-click "NavigationPane*List_Tree1" )(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Materials|Fluid"))(cx-gui-do cx-list-tree-right-click "NavigationPane*List_Tree1" )')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "MenuBar*PopupMenuTree-Fluid*New...")')
+setup1.SendCommand(Command="(cx-gui-do cx-set-text-entry \"Create/Edit Materials*Table1*Frame1*Table1*TextEntry1(Name)\" \"cell-pack\")(cx-gui-do cx-set-list-selections \"Create/Edit Materials*Table1*Frame1*Table1*DropDownList4(Materials)\" '( 1))")
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Create/Edit Materials*Table1*Frame1*Table1*DropDownList4(Materials)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-text-entry "Create/Edit Materials*Table1*Frame1*Table1*TextEntry1(Name)" "cell-pack")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Create/Edit Materials*PanelButtons*PushButton3(Change/Create)")(cx-gui-do cx-activate-item "Question*OK")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Information*OK")(cx-gui-do cx-activate-item "Create/Edit Materials*PanelButtons*PushButton1(Close)")')
+setup1.SendCommand(Command="(cx-gui-do cx-set-list-selections \"Materials*Table1*List1(Materials)\" '( 2))(cx-gui-do cx-activate-item \"Materials*Table1*List1(Materials)\")")
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Materials*Table1*ButtonBox2*PushButton1(Create/Edit)")')
+setup1.SendCommand(Command="(cx-gui-do cx-set-text-entry \"Create/Edit Materials*Table1*Frame1*Table1*TextEntry1(Name)\" \"plasma\")(cx-gui-do cx-set-real-entry-list \"Create/Edit Materials*RealEntry10\" '( 1.024))(cx-gui-do cx-set-real-entry-list \"Create/Edit Materials*RealEntry16\" '( 1.5e-05))")
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Create/Edit Materials*PanelButtons*PushButton3(Change/Create)")(cx-gui-do cx-activate-item "Question*OK")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Create/Edit Materials*PanelButtons*PushButton1(Close)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Materials|Solid"))')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Materials|Solid"))(cx-gui-do cx-activate-item "NavigationPane*List_Tree1")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Materials|Solid"))(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Cell Zone Conditions"))')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Cell Zone Conditions"))(cx-gui-do cx-activate-item "NavigationPane*List_Tree1")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Cell Zone Conditions"))(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Cell Zone Conditions|geometry_solid (fluid, id=3)"))(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Boundary Conditions|interior-geometry_solid (interior, id=2)"))(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Boundary Conditions|interior-geometry_solid (interior, id=2)"))(cx-gui-do cx-list-tree-right-click "NavigationPane*List_Tree1" )(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Boundary Conditions"))(cx-gui-do cx-list-tree-right-click "NavigationPane*List_Tree1" )(cx-use-window-id 1)(cx-use-window-id 1)(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list ))(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Boundary Conditions|wall-geometry_solid (wall, id=1)"))(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Boundary Conditions|wall-geometry_solid (wall, id=1)"))(cx-gui-do cx-list-tree-right-click "NavigationPane*List_Tree1" )(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Boundary Conditions|interior-geometry_solid (interior, id=2)"))(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Models|Species (Off)"))')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Models|Species (Off)"))(cx-gui-do cx-activate-item "NavigationPane*List_Tree1")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Models|Species (Off)"))(cx-gui-do cx-activate-item "Species Model*PanelButtons*PushButton2(Cancel)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Cell Zone Conditions|geometry_solid (fluid, id=3)"))')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Cell Zone Conditions|geometry_solid (fluid, id=3)"))(cx-gui-do cx-activate-item "NavigationPane*List_Tree1")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Cell Zone Conditions|geometry_solid (fluid, id=3)"))(cx-gui-do cx-activate-item "Fluid*PanelButtons*PushButton2(Cancel)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Cell Zone Conditions|geometry_solid (fluid, id=3)|phase-1"))')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Cell Zone Conditions|geometry_solid (fluid, id=3)|phase-1"))(cx-gui-do cx-activate-item "NavigationPane*List_Tree1")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Cell Zone Conditions|geometry_solid (fluid, id=3)|phase-1"))(cx-gui-do cx-activate-item "Fluid*PanelButtons*PushButton2(Cancel)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Boundary Conditions"))(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Boundary Conditions"))')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Boundary Conditions"))(cx-gui-do cx-activate-item "NavigationPane*List_Tree1")')
+setup1.SendCommand(Command="(cx-gui-do cx-set-list-tree-selections \"NavigationPane*List_Tree1\" (list \"Setup|Boundary Conditions\"))(cx-gui-do cx-set-list-selections \"Boundary Conditions*Table1*List2(Zone)\" '( 0))(cx-gui-do cx-activate-item \"Boundary Conditions*Table1*List2(Zone)\")(cx-gui-do cx-set-list-tree-selections \"NavigationPane*List_Tree1\" (list \"Solution|Run Calculation\"))(cx-gui-do cx-set-list-tree-selections \"NavigationPane*List_Tree1\" (list \"Solution|Run Calculation\"))")
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Solution|Run Calculation"))(cx-gui-do cx-activate-item "NavigationPane*List_Tree1")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Solution|Run Calculation"))(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Boundary Conditions"))(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Boundary Conditions"))')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Boundary Conditions"))(cx-gui-do cx-activate-item "NavigationPane*List_Tree1")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Boundary Conditions"))')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Ribbon*Frame1*Frame3(Setting Up Physics)*Table1*Table3(Model Specific)*PushButton1(Discrete Phase)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Ribbon*Frame1*Frame3(Setting Up Physics)*Table1*Table3(Model Specific)*PushButton1(Discrete Phase)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Ribbon*Frame1*Frame5(Solving)*Table1*Table3(Initialization)*PushButton5(Initialize)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Ribbon*Frame1*Frame6(Postprocessing)*Table1*Table3(Plots)*PushButton1(XY Plot)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Ribbon*Frame1*Frame6(Postprocessing)*Table1*Table3(Plots)*PushButton1(XY Plot)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-toggle-button2 "Ribbon*Frame1*Frame3(Setting Up Physics)*Table1*Table3(Solver)*ButtonBox1(Time)*Steady" #t)(cx-gui-do cx-activate-item "Ribbon*Frame1*Frame3(Setting Up Physics)*Table1*Table3(Solver)*ButtonBox1(Time)*Steady")(cx-gui-do cx-activate-item "Information*OK")(cx-gui-do cx-set-toggle-button2 "Ribbon*Frame1*Frame3(Setting Up Physics)*Table1*Table3(Solver)*ButtonBox1(Time)*Transient" #t)(cx-gui-do cx-activate-item "Ribbon*Frame1*Frame3(Setting Up Physics)*Table1*Table3(Solver)*ButtonBox1(Time)*Transient")(cx-gui-do cx-activate-item "Information*OK")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Ribbon*Frame1*Frame3(Setting Up Physics)*Table1*Table3(Models)*PushButton10(More)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Ribbon*Frame1*Frame3(Setting Up Physics)*Table1*Table3(Models)*PushButton10(More)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Boundary Conditions"))(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Boundary Conditions"))')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Boundary Conditions"))(cx-gui-do cx-activate-item "NavigationPane*List_Tree1")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Setup|Boundary Conditions"))')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Boundary Conditions*Table1*Table3*Table4*ButtonBox1*PushButton2(Parameters)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Parameters*PanelButtons*PushButton1(Close)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Boundary Conditions*Table1*Table3*Table4*ButtonBox1*PushButton3(Display Mesh)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-toggle-button2 "Mesh Display*Table1*Frame1*Frame1*ToggleBox1(Options)*CheckButton2(Edges)" #f)(cx-gui-do cx-activate-item "Mesh Display*Table1*Frame1*Frame1*ToggleBox1(Options)*CheckButton2(Edges)")(cx-gui-do cx-set-toggle-button2 "Mesh Display*Table1*Frame1*Frame1*ToggleBox1(Options)*CheckButton3(Faces)" #f)(cx-gui-do cx-activate-item "Mesh Display*Table1*Frame1*Frame1*ToggleBox1(Options)*CheckButton3(Faces)")(cx-gui-do cx-set-toggle-button2 "Mesh Display*Table1*Frame1*Frame1*ToggleBox1(Options)*CheckButton2(Edges)" #t)(cx-gui-do cx-activate-item "Mesh Display*Table1*Frame1*Frame1*ToggleBox1(Options)*CheckButton2(Edges)")(cx-gui-do cx-set-toggle-button2 "Mesh Display*Table1*Frame1*Frame1*ToggleBox1(Options)*CheckButton3(Faces)" #t)(cx-gui-do cx-activate-item "Mesh Display*Table1*Frame1*Frame1*ToggleBox1(Options)*CheckButton3(Faces)")(cx-gui-do cx-activate-item "Mesh Display*PanelButtons*PushButton2(Cancel)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Boundary Conditions*Table1*Table3*Table4*Table2*ButtonBox1*PushButton2(Profiles)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Profiles*PanelButtons*PushButton2(Cancel)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Boundary Conditions*Table1*Table3*Table4*Table2*PushButton2(Operating Conditions)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Operating Conditions*PushButton8(parameter)")(cx-gui-do cx-activate-item "Select Input Parameter*Table1*PushButton4(New Parameter)")(cx-gui-do cx-activate-item "Input Parameter Properties*PanelButtons*PushButton2(Cancel)")(cx-gui-do cx-activate-item "Select Input Parameter*PanelButtons*PushButton2(Cancel)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Operating Conditions*PanelButtons*PushButton2(Cancel)")')
+setup1.SendCommand(Command="(cx-gui-do cx-set-list-selections \"Boundary Conditions*Table1*List2(Zone)\" '( 1))(cx-gui-do cx-activate-item \"Boundary Conditions*Table1*List2(Zone)\")")
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Boundary Conditions*Table1*Table3*Table4*ButtonBox1*PushButton1(Edit)")')
+setup1.SendCommand(Command="(cx-gui-do cx-set-toggle-button2 \"Wall*Frame3*Frame1(Momentum)*Table1*Frame1*Frame1*Table1*ToggleBox1(Wall Motion)*Moving Wall\" #t)(cx-gui-do cx-activate-item \"Wall*Frame3*Frame1(Momentum)*Table1*Frame1*Frame1*Table1*ToggleBox1(Wall Motion)*Moving Wall\")(cx-gui-do cx-set-list-selections \"Wall*Frame3*Frame1(Momentum)*Table1*Frame1*Frame1*Table1*Table2(Motion)*Table2*Table1*DropDownList1\" '( 1))")
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Wall*Frame3*Frame1(Momentum)*Table1*Frame1*Frame1*Table1*Table2(Motion)*Table2*Table1*DropDownList1")(cx-gui-do cx-activate-item "Input Parameter Properties*PanelButtons*PushButton2(Cancel)")')
+setup1.SendCommand(Command="(cx-gui-do cx-set-toggle-button2 \"Wall*Frame3*Frame1(Momentum)*Table1*Frame1*Frame1*Table1*Table2(Motion)*Table1*ToggleBox2*Rotational\" #t)(cx-gui-do cx-activate-item \"Wall*Frame3*Frame1(Momentum)*Table1*Frame1*Frame1*Table1*Table2(Motion)*Table1*ToggleBox2*Rotational\")(cx-gui-do cx-set-toggle-button2 \"Wall*Frame3*Frame1(Momentum)*Table1*Frame1*Frame1*Table1*Table2(Motion)*Table1*ToggleBox1*Absolute\" #t)(cx-gui-do cx-activate-item \"Wall*Frame3*Frame1(Momentum)*Table1*Frame1*Frame1*Table1*Table2(Motion)*Table1*ToggleBox1*Absolute\")(cx-gui-do cx-set-toggle-button2 \"Wall*Frame3*Frame1(Momentum)*Table1*Frame1*Frame1*Table1*Table2(Motion)*Table1*ToggleBox2*Components\" #t)(cx-gui-do cx-activate-item \"Wall*Frame3*Frame1(Momentum)*Table1*Frame1*Frame1*Table1*Table2(Motion)*Table1*ToggleBox2*Components\")(cx-gui-do cx-set-toggle-button2 \"Wall*Frame3*Frame1(Momentum)*Table1*Frame1*Frame1*Table1*Table2(Motion)*Table1*ToggleBox2*Rotational\" #t)(cx-gui-do cx-activate-item \"Wall*Frame3*Frame1(Momentum)*Table1*Frame1*Frame1*Table1*Table2(Motion)*Table1*ToggleBox2*Rotational\")(cx-gui-do cx-set-real-entry-list \"Wall*Frame3*Frame1(Momentum)*Table1*Frame1*Frame1*Table1*Table2(Motion)*Table3*Table1*RealEntry2(Speed)\" '( 10.47198))(cx-gui-do cx-activate-item \"Wall*PanelButtons*PushButton1(OK)\")")
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Ribbon*Frame1*Frame9(Design)*Table1*Table3(Adjoint-Based)*PushButton5(Calculate)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-integer-entry "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)" 2)(cx-gui-do cx-activate-item "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-integer-entry "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)" 3)(cx-gui-do cx-activate-item "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-integer-entry "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)" 4)(cx-gui-do cx-activate-item "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-integer-entry "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)" 5)(cx-gui-do cx-activate-item "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-integer-entry "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)" 6)(cx-gui-do cx-activate-item "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-integer-entry "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)" 7)(cx-gui-do cx-activate-item "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-integer-entry "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)" 8)(cx-gui-do cx-activate-item "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-integer-entry "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)" 9)(cx-gui-do cx-activate-item "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-integer-entry "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)" 10)(cx-gui-do cx-activate-item "Run Adjoint Calculation*Table1*IntegerEntry3(Number of Iterations)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Run Adjoint Calculation*Table1*PushButton1(Initialize)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Run Adjoint Calculation*PanelButtons*PushButton1(Close)")')
+setup1.SendCommand(Command='(cx-gui-do cx-set-list-tree-selections "NavigationPane*List_Tree1" (list "Results|Graphics"))')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Boundary Conditions*Table1*Table3*Table4*ButtonBox1*PushButton1(Edit)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Wall*PanelButtons*PushButton1(OK)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Ribbon*Frame1*Frame6(Postprocessing)*Table1*Table3(Plots)*PushButton2(Histogram)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Histogram*PanelButtons*PushButton2(Cancel)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Ribbon*Frame1*Frame6(Postprocessing)*Table1*Table3(Plots)*PushButton3(Residuals)")')
+setup1.SendCommand(Command='(cx-gui-do cx-activate-item "Residual Monitors*PanelButtons*PushButton2(Cancel)")')
+with Transaction():
+    Save(Overwrite=True)
+    setup1.SendCommand(Command='(cx-gui-do cx-activate-item "MenuBar*FileMenu*Save Project")')
+Reset()

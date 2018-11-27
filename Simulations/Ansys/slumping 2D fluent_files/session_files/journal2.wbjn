@@ -1,0 +1,9 @@
+﻿# encoding: utf-8
+# Release 18.1
+SetScriptVersion(Version="18.1.463")
+with Transaction():
+    system1 = GetSystem(Name="FFF")
+    setup1 = system1.GetContainer(ComponentName="Setup")
+    fluentLauncherSettings1 = setup1.GetFluentLauncherSettings()
+    fluentLauncherSettings1.SetEntityProperties(Properties=Set(EnvPath={}))
+    setup1.Edit()
