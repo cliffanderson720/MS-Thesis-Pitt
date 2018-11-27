@@ -30,7 +30,7 @@ for j in range(1,len(t)): # time
     dTdt[n-1] = alpha*(-(T[n-1]-T[n-2])/dx**2+(T2s-T[n-1])/dx**2)
     T = T+dTdt*dt
     
-#    plt.clf()
+    plt.clf()
     plt.figure(1)
     plt.plot(x,T)
     plt.legend([round(t[j],2)])

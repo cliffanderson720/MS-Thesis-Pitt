@@ -27,30 +27,6 @@ def with_keys(dictionary, keys):
     key_set = set(keys) & set(dictionary.keys())
     return {key: dictionary[key] for key in key_set}
 
-#def select_cells(cell_types,dictionaries = (radius,density,sedcoef,viscosity),action='include'):
-#    '''
-#    Subsets dictionaries to include desired cell types. This function exists to
-#    preclude individual functions from subsetting. This may speed things up.
-#    --------------------------------------------------------------------------
-#    Inputs:
-#        cell_types: tuple of cell types strings to include/exclude. Default action is to include
-#                    possible cell types include 'RBC', 'WBC', 'plate', 'bac'
-#        dictionaries: tuple of dictionaries to subset
-#        action: string selecting whether to 'include' or 'exclude' cell_types
-#    --------------------------------------------------------------------------
-#    Output:
-#        Tuple of dictionaries to use for calculations
-#    '''
-#    
-#    
-#    '''
-#    I stopped b/c probably not worth it. But here's a good url:
-#        https://stackoverflow.com/questions/17659580/python-list-of-dictionaries-projection-filter-or-subset
-#    '''
-#    if action == 'include':
-#        selected_cells = with_keys(dictionary,cell_types)
-#    return
-
 radius  = {'RBC':3.75e-6,'WBC':6.25e-6,'plate':1.19e-6,'bac':2.5e-6} # radius in meters
 density = {'RBC':1093,   'WBC':1066,   'plate':1053,   'bac': 1025 } # density in kg/m3
 sedcoef = {'RBC':12e-7,  'WBC':1.2e-7, 'plate':0.032e-7} # Sedimentation coefficient in s (Van Wie)
@@ -125,7 +101,11 @@ def stokes(RPM,r,cell_radius,cell_density,rho_f=1024,visc=.0026,mode=None, **kwa
         
     return speeds
 
-
+# dimensional analysis of stokes function
+#var accel den radi visc total
+# m    1   -3   2    1     1
+# s   -2             1    -1
+#kg         1       -1     0
 
 def RZ(rho,umax,n,rhomax=1):
     return umax*(rhomax-rho)**n
@@ -203,9 +183,42 @@ def porosity(concs,power=1,radius_dict=radius):
 def michaels(a,n,amax=0.95):
     '''
     Michaels bolger correction used in Lerche's 2001 paper.
+    See Michaels function.py in background-and-testing for graphing code
     '''
     return (1-a)**2*(1-a/amax)**n
 
+def EOflux(rhos):
+    '''
+    Returns the Engquist-Osher flux based on the derivative of the RZ correlation.
+    Suitable for 1D arrays. Uses default values of a_max=1 and n=2.71 from Barnea and Mizrahi.
+    Tag Burger 2001 as part of cleanup
+    '''
+    fplus = [rho*max(RZfluxprime2(rho,1,2.71),0) for rho in rhos]
+    fminus = [rho*min(RZfluxprime2(rho,1,2.71),0) for rho in rhos]
+    
+    return fplus,fminus
+
+def van_wie_(Ctot,den,rad,S,visc):
+    '''
+    calculates velocity of ith cell type based on the hindrance function in Van Wie 1986.
+    
+    ****This needs to be reworked before it can be used.******
+    Right now, it wants dictionary values for den, s and visc. This will be deprecated in favor of tuples
+    
+    Inputs: Ctot: ixj array: total solids volume fraction
+            den:  1xj array: cell densities
+            s:    1xj array: sedimentation coefficients    
+            visc: scalar:    value of plasma viscosity. Defaults to 2.6 centiPoise
+            
+            
+    example function call: vel_i(Crbc[0,:],**RBC)
+    '''
+    
+    force   = S*omega**2*r     # centrifugal acceleration term    
+    del_rho = (den-Psus)/(den-Plas['den']) # density gradient term
+    hinder  = np.exp(-2.5*Ctot/(1-39/64*Ctot)) # local concentration correction introduced by Hawley
+    
+    return force*del_rho*hinder
 
 #### Setting up concentration arrays to test the porosity function
 #conc1a = np.linspace(0,.25,51)
