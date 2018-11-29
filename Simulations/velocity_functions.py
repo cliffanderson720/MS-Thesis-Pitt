@@ -136,8 +136,9 @@ def RZfluxprime2(rho,umax,n):
     '''
     return -rho*umax*n*(1-rho)**(n-1) + umax*(1-rho)**n
 
-def porosity(concs,power=1,radius_dict=radius):
+def porosity(concs,power=1,radii=(3.75e-6,2.5e-6)):
     '''
+
     Calculates the apparent porosity for j particle types
     -------------------------------------------------------------------------
     inputs:
@@ -148,7 +149,7 @@ def porosity(concs,power=1,radius_dict=radius):
         power: scalar exponent for the porosity. Used in empirical correlations.
                see Masliyah articles quoted in Patwardhan and Tien 1985
         
-        radius_dict: dictionary object containing the radius of included cell types
+        radius: tuple of j cell radii
     -------------------------------------------------------------------------
     outputs:
         porosity: n by j array of apparent porosities for each input composition
@@ -158,25 +159,15 @@ def porosity(concs,power=1,radius_dict=radius):
     '''
     np.seterr(divide='ignore',invalid='ignore')
     
-    # convert dictionary of cell values to an array to allow for array operations
-    d_cells = 2*np.array(list(radius_dict.values()))
+    # convert tuple of cell values to an array to allow for array operations
+    d_cells = 2*np.array(radii)
 
-    # check to see if input concentration array is 1D or 2D. If 2D, sum row-wise
-    try:
-        if len(concs.shape) == 1:
-            dim = 0
-        elif len(concs.shape) == 2:
-            dim = 1
-    except:
-        print('func: porosity: dimension error in concentration summing')
-        
-    
 #    # normalize concentrations to one
 #    concs = concs / np.sum(concs,axis=dim,keepdims=True) # for keepdims explanation, see https://stackoverflow.com/questions/16202348/numpy-divide-row-by-row-sum
     
     # Compute the void envelope for the particle mixture
-    d_average = np.sum(concs*d_cells,axis=dim)/np.sum(concs,axis=dim)
-    void_envelope = d_average*(np.sum(concs,axis=dim)**(-1/3.)-1)
+    d_average = np.sum([concs[i,:]*d for i,d in enumerate(d_cells)],axis=0)/np.sum(concs,axis=0)
+    void_envelope = d_average*(np.sum(concs,axis=0)**(-1/3.)-1)
     
     # reshape the data into n rows and 1 column
     void_envelope = np.reshape(void_envelope,(len(void_envelope),1))
@@ -184,7 +175,8 @@ def porosity(concs,power=1,radius_dict=radius):
     # compute the apparent porosity for each particle type
     # I put the nan function there to make the porosity = 1 for particle concentration = 0
     porosity = 1-np.nan_to_num((1+void_envelope/d_cells)**-3)
-    return porosity**power
+
+    return porosity.T**power
 
 def michaels(a,n,amax=0.95):
     '''
@@ -226,14 +218,14 @@ def van_wie_(Ctot,den,rad,S,visc):
     
     return force*del_rho*hinder
 
-#### Setting up concentration arrays to test the porosity function
-#conc1a = np.linspace(0,.25,51)
-#concs = np.empty((4,len(conc1a)))
-#concs = np.array([conc1a for i in range(4)]).T
-#                
-##porosity(concs)
-#plt.plot(concs,porosity(concs,power=2.71))
-#plt.legend(radius.keys())
+### Setting up concentration arrays to test the porosity function
+conc1a = np.linspace(0,.5,6)
+concs = np.empty((2,len(conc1a)))
+concs = np.array([conc1a for i in range(2)])
+                
+#porosity(concs)
+plt.plot(concs.T,porosity(concs,power=2.71).T)
+plt.legend(radius.keys())
 ####
 
 #RPMs = np.linspace(0,8000)
