@@ -5,19 +5,42 @@ r"""
 1D sedimentation simulation
 ==================
 
-Solve the one-dimensional shallow water equations:
+Solve a one-dimensional polydisperse sedimentation problem
 
 .. math::
     \rho_t + (f(\rho))_x & = 0 \\
 
 Here \rho is a vector of volume fractions \in[0,1]. f is a user-specified function
 for the flux of particles.
-The default initial condition used here models a dam break.
 """
-
 from __future__ import absolute_import
+import importlib
+# importlib.reload(riemann)
+
 import numpy as np
 from clawpack import riemann
+import clawpack as cp
+
+def lowerwall(state,dim,t,qbc,auxbc,num_ghost):
+    for i in range(num_ghost):
+        qbc[:,i,...] = -qbc[:,2*num_ghost-1-i,...]
+
+def upperwall(state,dim,t,qbc,auxbc,num_ghost):
+    for i in range(num_ghost):
+        qbc[:,-i-1,...] = -qbc[:,-2*num_ghost+i,...]
+
+def lowerdirichlet(state,dim,t,qbc,auxbc,num_ghost):
+    nspecies = qbc.shape[0]
+    bvals = np.array([0.,0.])
+    for i in range(num_ghost):
+        qbc[:,i] = bvals
+
+def upperdirichlet(state,dim,t,qbc,auxbc,num_ghost):
+    nspecies = qbc.shape[0]
+    bvals = np.array([0.95,0.])
+    for i in range(num_ghost):
+        qbc[:,-i-1] = bvals
+
 
 def setup(use_petsc=False,kernel_language='Python',outdir='./_output',solver_type='classic'):
 
@@ -27,9 +50,10 @@ def setup(use_petsc=False,kernel_language='Python',outdir='./_output',solver_typ
         from clawpack import pyclaw
 
     if kernel_language == 'Python':
-        rs = riemann.shallow_1D_py.shallow_roe_1D
+        rs = riemann.advection_nonlinear_1D_py.advection_nonlinear_1D
     elif kernel_language == 'Fortran':
-        rs = riemann.shallow_roe_with_efix_1D
+        print('No fortran solver available for advection_nonlinear_1D')
+        pass
 
     if solver_type == 'classic':
         solver = pyclaw.ClawSolver1D(rs)
@@ -39,49 +63,63 @@ def setup(use_petsc=False,kernel_language='Python',outdir='./_output',solver_typ
 
     solver.kernel_language = kernel_language
 
-    solver.bc_lower[0] = pyclaw.BC.extrap
-    solver.bc_upper[0] = pyclaw.BC.extrap
+    solver.bc_lower[0] = pyclaw.BC.custom
+    solver.bc_upper[0] = pyclaw.BC.custom
+    solver.user_bc_lower = lowerdirichlet
+    solver.user_bc_upper = upperdirichlet
 
-    xlower = -5.0
-    xupper = 5.0
-    mx = 10
+    xlower = 0.0
+    xupper = 1.0
+    mx = 51
     x = pyclaw.Dimension(xlower,xupper,mx,name='x')
     domain = pyclaw.Domain(x)
+    num_eqn = 2
     state = pyclaw.State(domain,num_eqn)
 
     # Gravitational constant
-    state.problem_data['grav'] = 1.0
-    state.problem_data['dry_tolerance'] = 1e-3
-    state.problem_data['sea_level'] = 0.0
+    state.problem_data['u_rel'] = np.array([1.,1/30.])
+    state.problem_data['efix'] = False
 
     xc = state.grid.x.centers
 
-    IC='dam-break'
-    x0=0.
+    IC = 'dam-break'
+    # IC = 'uniform-all'
+    # IC = 'perturbation'
+    x0 = xc[2]
 
-    if IC=='dam-break':
-        hl = 3.
-        ul = 0.
-        hr = 1.
-        ur = 0.
-        state.q[depth,:] = hl * (xc <= x0) + hr * (xc > x0)
-        state.q[momentum,:] = hl*ul * (xc <= x0) + hr*ur * (xc > x0)
-    elif IC=='2-shock':
-        hl = 1.
-        ul = 1.
-        hr = 1.
-        ur = -1.
-        state.q[depth,:] = hl * (xc <= x0) + hr * (xc > x0)
-        state.q[momentum,:] = hl*ul * (xc <= x0) + hr*ur * (xc > x0)
+    if IC=='uniform-all':
+        c0 = np.array([0.2,0.0])
+        # state defaults to empty. Convert to ones and fill with c0
+        state.q = np.ones_like(state.q)*c0[:,np.newaxis]
+
+    elif IC=='dam-break':
+        # I changed state.is_valid() to always return true for fortran contiguity
+        cr0 = np.array([0.2,0.0])
+        cl0 = np.array([0.0,0.0])
+        state.q = np.ones_like(state.q)
+        state.q = cl0[:,np.newaxis]*(xc <= x0)[np.newaxis,:] + \
+                  cr0[:,np.newaxis]*(xc >  x0)[np.newaxis,:]
+
+# Change these later to reflect initial conditions
+    # elif IC=='2-shock':
+    #     hl = 1.
+    #     ul = 1.
+    #     hr = 1.
+    #     ur = -1.
+    #     state.q[depth,:] = hl * (xc <= x0) + hr * (xc > x0)
+    #     state.q[momentum,:] = hl*ul * (xc <= x0) + hr*ur * (xc > x0)
     elif IC=='perturbation':
-        eps=0.1
-        state.q[depth,:] = 1.0 + eps*np.exp(-(xc-x0)**2/0.5)
-        state.q[momentum,:] = 0.
+        # x1 = x0
+        x1 = 0.3
+        x2 = 0.7
+        eps = 0.1
+        state.q[0,:] = eps*np.exp(-1/eps*(xc-x1)**2)
+        state.q[1,:] = eps*np.exp(-1/eps*(xc-x1)**2)
 
     claw = pyclaw.Controller()
     claw.keep_copy = True
-    claw.num_output_times = 3
-    claw.tfinal = 0.2
+    claw.num_output_times = 50
+    claw.tfinal = 10
     claw.solution = pyclaw.Solution(state,domain)
     claw.solver = solver
     claw.outdir = outdir
@@ -90,7 +128,7 @@ def setup(use_petsc=False,kernel_language='Python',outdir='./_output',solver_typ
     return claw
 
 
-#--------------------------
+#-------------------------
 def setplot(plotdata):
 #--------------------------
     """
@@ -101,33 +139,34 @@ def setplot(plotdata):
     plotdata.clearfigures()  # clear any old figures,axes,items data
 
     # Figure for depth
-    plotfigure = plotdata.new_plotfigure(name='Water height', figno=0)
+    plotfigure = plotdata.new_plotfigure(name='Component 1', figno=0)
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
-    plotaxes.xlimits = [-5.0,5.0]
-    plotaxes.title = 'Water height'
+    plotaxes.xlimits = [0,1.0]
+    plotaxes.ylimits = [0,1.0]
+    plotaxes.title = 'Component 1 phi'
     plotaxes.axescmd = 'subplot(211)'
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='1d')
-    plotitem.plot_var = depth
+    plotitem.plot_var = 0
     plotitem.plotstyle = '-'
     plotitem.color = 'b'
     plotitem.kwargs = {'linewidth':3}
 
-    # Figure for momentum[1]
-    #plotfigure = plotdata.new_plotfigure(name='Momentum', figno=1)
+    # Figure for species 2[1]
+    # plotfigure = plotdata.new_plotfigure(name='Component 2', figno=1)
 
     # Set up for axes in this figure:
     plotaxes = plotfigure.new_plotaxes()
     plotaxes.axescmd = 'subplot(212)'
-    plotaxes.xlimits = [-5.0,5.0]
-    plotaxes.title = 'Momentum'
+    plotaxes.xlimits = [0,1.0]
+    plotaxes.title = 'Component 2'
 
     # Set up for item on these axes:
     plotitem = plotaxes.new_plotitem(plot_type='1d')
-    plotitem.plot_var = momentum
+    plotitem.plot_var = 1
     plotitem.plotstyle = '-'
     plotitem.color = 'b'
     plotitem.kwargs = {'linewidth':3}
