@@ -37,7 +37,7 @@ def lowerdirichlet(state,dim,t,qbc,auxbc,num_ghost):
 
 def upperdirichlet(state,dim,t,qbc,auxbc,num_ghost):
     nspecies = qbc.shape[0]
-    bvals = np.array([0.95,0.])
+    bvals = np.array([0.95,0.0])
     for i in range(num_ghost):
         qbc[:,-i-1] = bvals
 
@@ -99,6 +99,7 @@ def setup(use_petsc=False,kernel_language='Python',outdir='./_output',solver_typ
         state.q = np.ones_like(state.q)
         state.q = cl0[:,np.newaxis]*(xc <= x0)[np.newaxis,:] + \
                   cr0[:,np.newaxis]*(xc >  x0)[np.newaxis,:]
+        state.q[0,-1] = 1.
 
 # Change these later to reflect initial conditions
     # elif IC=='2-shock':
