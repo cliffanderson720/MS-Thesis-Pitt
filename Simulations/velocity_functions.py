@@ -260,14 +260,14 @@ def van_wie_(Ctot,den,rad,S,visc):
     
     return force*del_rho*hinder
 
-### Setting up concentration arrays to test the porosity function
-conc1a = np.linspace(0,.5,51)
-concs = np.empty((2,len(conc1a)))
-concs = np.array([conc1a for i in range(2)])
-                
-#porosity(concs)
-plt.plot(concs.T,porosity(concs,power=2.71).T)
-plt.legend(radius.keys())
+#### Setting up concentration arrays to test the porosity function
+#conc1a = np.linspace(0,.5,51)
+#concs = np.empty((2,len(conc1a)))
+#concs = np.array([conc1a for i in range(2)])
+#                
+##porosity(concs)
+#plt.plot(concs.T,porosity(concs,power=2.71).T)
+#plt.legend(radius.keys())
 ###
 
 #RPMs = np.linspace(0,8000)
