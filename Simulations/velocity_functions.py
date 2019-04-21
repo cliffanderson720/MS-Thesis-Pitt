@@ -69,7 +69,7 @@ def stokesdict(RPM,r,radius_dict,density_dict,rho_f=1024,visc=.0026,mode=None):
         return accel*(2*(rho_i-rho_f)*r_cell**2)/(9*visc)
 
 
-def stokes(RPM,r,cell_radius,cell_density,rho_f=1024,visc=.0026,mode=None, **kwargs):
+def stokes_old(RPM,r,cell_radius,cell_density,rho_f=1024,visc=.0026,mode=None, **kwargs):
     '''
     Calculates the stokes velocity in m/s for j particle types
     -------------------------------------------------------------------------
@@ -107,6 +107,57 @@ def stokes(RPM,r,cell_radius,cell_density,rho_f=1024,visc=.0026,mode=None, **kwa
         
     return speed
 
+def stokes(RPM,r,cell_radius,cell_density,rho_f=1024,visc=.0026,mode=None):
+    '''
+    Calculates the stokes velocity in m/s for j particle types
+    -------------------------------------------------------------------------
+    Required inputs: 
+        RPM: scalar:  revolutions per minute
+        r:  ndarray:  moment arm (len=i) from the axis of rotation to the
+                      cell location (m)
+        cell_radius:  tuple of j cell radii (m)
+        cell_density: tuple of j cell densities (kg/m3)
+    -------------------------------------------------------------------------        
+    Optional inputs:
+        mode: string: default None
+                      options: 'gravity' - this returns an array of j speeds
+    -------------------------------------------------------------------------
+    Output:
+        speed: ndarray (jxi): stokes velocity of j particle types 
+                              at i spatial points
+    '''
+    # convert tuples to arrays for element-wise calculations
+    cell_radius  = np.array(cell_radius)
+    cell_density = np.array(cell_density)
+    
+    if mode=='gravity':
+        accel = 9.8 #m/s2
+        speed = accel*(2*(cell_density-rho_f)*cell_radius**2)/(9*visc)
+    else:
+        omega = RPM*2*3.1415926353/60  # convert from revolutions per minute to radians/s
+        accel = r*omega**2 # calculate radial acceleration
+        
+        try: # default case for when r is an array
+            nspatial = len(r)
+            ncells   = len(cell_radius)
+            speed = np.empty((ncells,nspatial))
+            for j in range(ncells):
+                speed[j,:] = accel*(2*(cell_density[j]-rho_f)*cell_radius[j]**2)/(9*visc)
+
+        except TypeError: # exception case where r is a scalar
+            ncells   = len(cell_radius)
+            speed = np.empty(ncells)
+            for j in range(ncells):
+                speed[j] = accel*(2*(cell_density[j]-rho_f)*cell_radius[j]**2)/(9*visc)
+                    
+    return speed
+
+
+#rs = np.linspace(0.5,1,4)
+#c_max = stokes(3000,rs,(3.75e-6,2.5e-6),(1090,1050))
+#print(c_max)
+#plt.plot(rs,c_max.T)
+    
 # dimensional analysis of stokes function
 #var accel den radi visc total
 # m    1   -3   2    1     1
@@ -142,17 +193,18 @@ def porosity(concs,power=1,radii=(3.75e-6,2.5e-6)):
     Calculates the apparent porosity for j particle types
     -------------------------------------------------------------------------
     inputs:
-        concs: n by j array of particle concentrations. Values are summed by row
-               n: rows: if 1D, n=1. If 2D, n is the length of the input array
-               j: columns: number of cell types. 
-
-        power: scalar exponent for the porosity. Used in empirical correlations.
-               see Masliyah articles quoted in Patwardhan and Tien 1985
+        concs: jxi array of particle concentrations. Values are summed by column
+               j: rows: number of cell types 
+               i: cols: number of grid points
+               
+        power: scalar exponent for the porosity (Can be made into f(cell type))
+               Used in empirical correlations: see Masliyah articles quoted in
+               Patwardhan and Tien 1985
         
         radius: tuple of j cell radii
     -------------------------------------------------------------------------
     outputs:
-        porosity: n by j array of apparent porosities for each input composition
+        porosity: jxi array of apparent porosities for each input composition
         
     Notes: When plotting a single row of concentrations, change the shape of
            conc[i,:] from (j,) to (j,1) using np.atleast_2d() or np.reshape()
