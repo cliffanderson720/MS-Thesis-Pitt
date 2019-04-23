@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 # testing analytical expression for jacobian on march 5 2019
 a = np.array([1,1/30.])
 p1 = np.linspace(0,1)
-p2 = 0.00
+p2 = 0.1
 m = 2
 # compute Jacobian?
 df1dp1 = p1*(1-p1)**m*(m+1)*(-1) + (1-p1)**(m+1)
