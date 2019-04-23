@@ -1,0 +1,412 @@
+
+ANSYS(R) Fluid Dynamics
+
+Executing from: C:\Program Files\ANSYS Inc\v181\AFD\bin\afd.bat 
+
+Release 18.1
+
+Point Releases and Patches installed:
+
+ANSYS, Inc. Products Release 18.1
+ANSYS Mechanical Products Release 18.1
+ANSYS Customization Files for User Programmable Features Release 18.1
+ANSYS Autodyn Release 18.1
+ANSYS AIM Release 18.1
+ANSYS CFX (includes ANSYS CFD-Post) Release 18.1
+ANSYS Fluent (includes ANSYS CFD-Post) Release 18.1
+ANSYS TurboGrid Release 18.1
+ANSYS FENSAP-ICE Release 18.1
+ANSYS Polyflow (includes ANSYS CFD-Post) Release 18.1
+ANSYS CFD-Post only Release 18.1
+ANSYS Forte Release 18.1
+ANSYS ICEM CFD Release 18.1
+ANSYS Aqwa Release 18.1
+ANSYS Viewer Release 18.1
+ANSYS Icepak (includes ANSYS CFD-Post) Release 18.1
+AutoCAD Release 18.1
+ACIS Release 18.1
+Catia, Version 5 Release 18.1
+Catia, Version 6 Release 18.1
+Creo Elements/Direct Modeling Release 18.1
+Inventor Release 18.1
+JTOpen Release 18.1
+NX Release 18.1
+Parasolid Release 18.1
+Creo Parametric Release 18.1
+Solid Edge Release 18.1
+SolidWorks Release 18.1
+ANSYS, Inc. License Manager Release 18.1 
+
+(c) 2017 SAS IP, Inc. All rights reserved. Unauthorized use, distribution or duplication is prohibited. This product is subject to U.S. laws governing export and re-export. For full Legal Notice, see documentation.
+
+Host spawning Node 0 on machine "CBMOONSHOT1C16" (win64).
+WARNING: No cached password or password provided.
+         use '-pass' or '-cache' to provide password
+Host 0 -- ip 128.187.56.53 -- ranks 0 - 1
+
+ host | 0
+======|======
+    0 : SHM
+
+ Prot -  All Intra-node communication is: SHM
+
+
+--------------------------------------------------------------------------------
+ID          Hostname        Core  O.S.         PID    Vendor                    
+--------------------------------------------------------------------------------
+e1          CBMOONSHOT1C16  2/8  Windows-x64  11596  Intel(R) Xeon(R) E3-1585L 
+e0*         CBMOONSHOT1C16  1/8  Windows-x64  4196   Intel(R) Xeon(R) E3-1585L 
+controller  CBMOONSHOT1C16       Windows-x64  9672   Intel(R) Xeon(R) E3-1585L 
+
+MPI Option Selected: ibmmpi
+Selected system interconnect: ethernet
+--------------------------------------------------------------------------------
+
+Cleanup script file is C:\Users\cma86\AppData\Local\Temp\cleanup-afd-CBMOONSHOT1C16-9672.bat
+Note: Rank = 0: Process affinity not being set (3).
+Note: Rank = 1: Process affinity not being set (3).
+
+Importing Mesh...
+	auto partitioning mesh by Metis (fast),
+	distributing mesh
+		parts..,
+		faces..,
+		nodes..,
+		cells..,
+	Creating polyhedra zones.
+	Processing face zones............
+	Processing cell zones..
+	Building polyhedra mesh.....................
+Note: Rank = 1: Process affinity not being set (3).
+
+       Clearing partially read grid.
+Note: Rank = 0: Process affinity not being set (3).
+Done.
+
+===============================================================================
+                                Mesh Statistics                                
+Region Name                                                               Value
+-------------------------------------------------------------------------------
+PhysicsRegion 2
+    Number of cell zones                                                      1
+    Number of cells                                                         780
+        Polyhedral                                                          780
+    Number of face zones                                                     11
+    Number of faces                                                       4 518
+    Bounding Box (m)                
+        Minimum                           [ 0.000e+000  0.000e+000 -1.000e-002]
+        Maximum                           [ 4.000e-003  3.000e-004  0.000e+000]
+    Volume (m3)                                                      9.430e-009
+    Minimum orthogonal quality                                       2.774e-001
+    Maximum aspect ratio                                             9.869e+000
+
+Total                               
+    Number of cells                                                         780
+    Number of faces                                                       4 518
+    Number of nodes                                                       3 653
+-------------------------------------------------------------------------------
+
+===============================================================================
+                              Partition Statistics
+Region Name              min  dev %         max  dev %             sum stddev %
+-------------------------------------------------------------------------------
+PhysicsRegion 2
+  Interior Cells         373   -4.4         407    4.4             780      4.4
+  Interior Faces        2249   -2.0        2342    2.0            4591      2.0
+  Exterior Cells          25   -2.0          26    2.0              51      2.0
+  Exterior Faces         156   -1.0         159    1.0             315      1.0
+       Neighbors           1                  1
+Total
+  Interior Cells         373   -4.4         407    4.4             780      4.4
+  Interior Faces        2249   -2.0        2342    2.0            4591      2.0
+  Exterior Cells          25   -2.0          26    2.0              51      2.0
+  Exterior Faces         156   -1.0         159    1.0             315      1.0
+       Neighbors           1                  1
+-------------------------------------------------------------------------------
+
+
+===============================================================================
+                                  Mesh Check                                   
+-------------------------------------------------------------------------------
+Cell volume                                                                 Ok
+Face area                                                                   Ok
+Face handedness correction                                                  Ok
+Face handedness                                                             Ok
+-------------------------------------------------------------------------------
+
+===============================================================================
+                               Data Model State                                
+-------------------------------------------------------------------------------
+Library:
+  MaterialsDB:
+    Material:Material 1
+      MolarMass = 0.018015268 [kg mol^-1]
+      LiquidProperties:
+        ThermalConductivity:
+          Option = Value
+          PropertyValue = 0.60651608022 [W m^-1 K^-1]
+        SpecificHeatCapacityCp:
+          Option = Value
+          PropertyValue = 4181.31499079 [J kg^-1 K^-1]
+        DynamicViscosity:
+          Option = Value
+          PropertyValue = 0.000890022489078 [Pa s]
+        Density:
+          Option = Value
+          PropertyValue = 997.04763676 [kg m^-3]
+    MaterialBehavior:MaterialAtState 1
+      MaterialName = Material 1
+      PhysicalState = Liquid
+      MaterialModel = ConstantProperties
+Analysis:DefaultAnalysis
+  SolverName = FLUX
+  SolutionControls:
+  AnalysisType:
+    Option = Steady
+  PhysicsRegion:PhysicsRegion 2
+    PhysicsRegionLocation = BODY1
+    Boundary:Boundary 3
+      BoundaryType = Wall
+      BoundaryLocations = FACE1,FACE2,FACE3,FACE5,FACE6,FACE8,FACE10,FACE11
+    Boundary:Boundary 2
+      BoundaryType = Outlet
+      BoundaryLocations = FACE4
+      Flow:
+        Pressure:
+          GaugeStaticPressure = 0 [Pa]
+    Boundary:Boundary 1
+      BoundaryType = Inlet
+      BoundaryLocations = FACE7
+      Flow:
+        Velocity:
+          Magnitude = 0.01 [m s^-1]
+    NumericalControls:
+    VariableControls:
+    PhaseDefinitions:
+      PhaseDefinition:MaterialAssignment 1
+        MaterialDistribution = Continuous
+        MaterialBehaviorName = MaterialAtState 1
+    InitialConditions:
+    PhysicsRegionReferenceFrame:
+    PhaseModels:
+    PhysicsType:
+      PhysicsTypeList = Fluid
+      PhysicsRegionType = Fluid
+
+-------------------------------------------------------------------------------
+
+===============================================================================
+                            Solution Initialization                            
+  iter   flowinit0  
+     1  1.1900e-03  
+     2  1.5541e-03  
+     3  4.2889e-04  
+     4  1.9830e-04  
+     5  8.6253e-05  
+-------------------------------------------------------------------------------
+
+===============================================================================
+                               Residual History                                
+  iter  continuity   xvelocity   yvelocity   zvelocity         tke         tef  
+     1  2.2806e-01  3.5865e-02  6.0033e-03  4.9334e-02  9.3671e-02  2.9207e-01  
+     2  2.9704e-02  3.5521e-02  6.8576e-03  4.8052e-02  1.5226e-01  5.7798e-02  
+     3  9.2932e-03  2.8049e-02  5.5151e-03  3.5759e-02  1.4061e-01  1.3811e-02  
+        artificial walls on 2 faces (5% area) of pressure outlet 'Boundary 2'.
+     4  3.9671e-03  1.9988e-02  5.2772e-03  2.5131e-02  1.1584e-01  3.5768e-03  
+     5  3.2642e-03  1.5409e-02  4.8975e-03  1.6912e-02  8.9799e-02  1.4080e-03  
+        artificial walls on 2 faces (5% area) of pressure outlet 'Boundary 2'.
+     6  2.1123e-03  1.0418e-02  3.9689e-03  1.1405e-02  8.8996e-02  1.0473e-03  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+     7  2.5817e-03  7.0174e-03  3.2460e-03  8.2132e-03  8.4396e-02  8.3040e-04  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+     8  1.9872e-03  6.2250e-03  2.8127e-03  6.2031e-03  7.7858e-02  7.0853e-04  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+     9  1.5259e-03  4.8165e-03  2.5335e-03  4.7528e-03  7.4580e-02  6.1512e-04  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+    10  1.1185e-03  3.6335e-03  2.2205e-03  3.9246e-03  6.8563e-02  4.7005e-04  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+    11  7.9173e-04  2.9233e-03  1.9224e-03  3.2363e-03  6.4947e-02  3.8523e-04  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+    12  5.6518e-04  2.4298e-03  1.6046e-03  2.7325e-03  6.3095e-02  3.2462e-04  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+    13  4.2955e-04  2.0025e-03  1.2797e-03  2.3180e-03  6.2675e-02  2.6454e-04  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+    14  3.3860e-04  1.6418e-03  1.0132e-03  1.9675e-03  6.0570e-02  2.2022e-04  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+    15  2.6472e-04  1.3352e-03  8.5854e-04  1.6659e-03  5.8989e-02  1.8098e-04  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+    16  2.1013e-04  1.0807e-03  7.4375e-04  1.4069e-03  5.8057e-02  1.4864e-04  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 18 cells (2%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    17  1.6797e-04  8.7264e-04  6.4619e-04  1.1831e-03  4.2299e-02  1.2129e-04  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 18 cells (2%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    18  1.3473e-04  7.0376e-04  5.5517e-04  9.9168e-04  2.5716e-02  9.8330e-05  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 22 cells (3%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    19  1.0723e-04  5.6656e-04  4.7365e-04  8.2854e-04  1.5628e-02  7.9216e-05  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 33 cells (4%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    20  8.6104e-05  4.5566e-04  3.9481e-04  6.8978e-04  9.4895e-03  6.3492e-05  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 49 cells (6%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    21  7.0250e-05  3.6924e-04  3.2416e-04  5.7231e-04  5.7514e-03  5.0543e-05  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 64 cells (8%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    22  5.7396e-05  2.9677e-04  2.6303e-04  4.7418e-04  3.4790e-03  4.0206e-05  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 86 cells (11%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    23  4.6683e-05  2.3954e-04  2.1313e-04  3.9201e-04  2.0997e-03  3.1856e-05  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 122 cells (16%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    24  3.7782e-05  1.9390e-04  1.7405e-04  3.2310e-04  1.2642e-03  2.5220e-05  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 158 cells (20%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    25  3.0379e-05  1.5730e-04  1.4338e-04  2.6563e-04  7.5916e-04  1.9986e-05  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 184 cells (24%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+  iter  continuity   xvelocity   yvelocity   zvelocity         tke         tef  
+    26  2.4458e-05  1.2793e-04  1.1911e-04  2.1783e-04  4.5469e-04  1.5888e-05  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 194 cells (25%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    27  1.9871e-05  1.0437e-04  9.9613e-05  1.7819e-04  2.7161e-04  1.2699e-05  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 203 cells (26%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    28  1.6390e-05  8.5434e-05  8.3549e-05  1.4544e-04  1.6182e-04  1.0229e-05  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 207 cells (27%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    29  1.3717e-05  7.0192e-05  7.0162e-05  1.1849e-04  9.6158e-05  8.3175e-06  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 214 cells (27%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    30  1.1552e-05  5.7893e-05  5.8995e-05  9.6412e-05  5.7000e-05  6.8365e-06  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 223 cells (29%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    31  9.7058e-06  4.7945e-05  4.9682e-05  7.8404e-05  3.3725e-05  5.8648e-06  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 228 cells (29%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    32  8.0998e-06  4.0084e-05  4.1920e-05  6.3738e-05  1.9943e-05  5.4967e-06  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 234 cells (30%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    33  6.8004e-06  3.4279e-05  3.5414e-05  5.1822e-05  1.1760e-05  4.7532e-06  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 240 cells (31%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    34  5.6302e-06  2.8843e-05  3.0092e-05  4.2218e-05  6.9314e-06  4.1103e-06  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 244 cells (31%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    35  4.6182e-06  2.4340e-05  2.5594e-05  3.4558e-05  4.0734e-06  3.1936e-06  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 246 cells (32%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    36  3.6758e-06  2.0190e-05  2.1692e-05  2.8303e-05  2.4291e-06  3.0174e-06  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 250 cells (32%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    37  2.9990e-06  1.7362e-05  1.8122e-05  2.3372e-05  1.4497e-06  2.5874e-06  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 255 cells (33%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    38  2.4569e-06  1.4726e-05  1.5034e-05  1.9309e-05  8.6311e-07  2.0261e-06  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 261 cells (33%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    39  1.9701e-06  1.2285e-05  1.2387e-05  1.5914e-05  5.2809e-07  1.7031e-06  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 267 cells (34%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    40  1.5990e-06  1.0334e-05  1.0131e-05  1.3134e-05  3.3156e-07  1.4408e-06  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 275 cells (35%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    41  1.3180e-06  8.6919e-06  8.3060e-06  1.0850e-05  2.1450e-07  1.2220e-06  
+        artificial walls on 3 faces (7% area) of pressure outlet 'Boundary 2'.
+        tke clipped to lower limit on 277 cells (36%) of 'PhysicsRegion 2'. Please check the turbulence setup.
+    42  1.0960e-06  7.3003e-06  6.8784e-06  8.9716e-06  1.4384e-07  1.0365e-06  
+Convergence criteria have been met.
+-------------------------------------------------------------------------------
+
+===============================================================================
+                                Variable Ranges                                
+Variable                                              Minimum      Maximum  
+-------------------------------------------------------------------------------
+pbns-cpld/pressure                                 -2.61283e+00  3.29793e+01
+pbns-cpld/velocity                                  3.33103e-05  1.39013e-01
+turb-seg/turbulent-viscosity                        1.80040e-16  4.40822e-08
+-------------------------------------------------------------------------------
+
+
+===============================================================================
+                             Conservation Summary                              
+Equation                                               Flow/Source
+-------------------------------------------------------------------------------
+pbns-cpld/velocity-0
+    Flow (+ve in): Boundary 1                          -8.644e-05
+    Flow (+ve in): Boundary 2                          -6.727e-07
+    Flow (+ve in): Boundary 3                           8.711e-05
+    Normalization factor                                7.871e-04
+    Net imbalance                                       8.989e-10  (   0.000%)
+
+pbns-cpld/velocity-1
+    Flow (+ve in): Boundary 1                           1.414e-09
+    Flow (+ve in): Boundary 2                          -2.359e-08
+    Flow (+ve in): Boundary 3                           2.212e-08
+    Normalization factor                                7.871e-04
+    Net imbalance                                      -4.706e-11  (   0.000%)
+
+pbns-cpld/velocity-2
+    Flow (+ve in): Boundary 1                           1.046e-07
+    Flow (+ve in): Boundary 2                          -2.209e-06
+    Flow (+ve in): Boundary 3                           2.105e-06
+    Normalization factor                                7.871e-04
+    Net imbalance                                       3.973e-10  (   0.000%)
+
+pbns-cpld/pressure
+    Flow (+ve in): Boundary 1                           2.991e-05
+    Flow (+ve in): Boundary 2                          -2.991e-05
+    Normalization factor                                2.991e-05
+    Net imbalance                                      -2.317e-09  (   0.008%)
+
+turb-seg/tke
+    Flow (+ve in): Boundary 1                           2.106e-11
+    Flow (+ve in): Boundary 2                          -9.480e-18
+    Flow (+ve in): Boundary 3                          -2.055e-11
+    Sources: PhysicsRegion 2                           -5.140e-13
+    Normalization factor                                2.106e-11
+    Net imbalance                                      -2.935e-17  (   0.000%)
+
+turb-seg/tef
+    Flow (+ve in): Boundary 1                          -2.116e-01
+    Flow (+ve in): Boundary 2                          -2.077e-01
+    Sources: PhysicsRegion 2                            4.192e-01
+    Normalization factor                                1.636e+00
+    Net imbalance                                      -7.384e-05  (   0.005%)
+-------------------------------------------------------------------------------
+
+
+
+===============================================================================
+                               Residual Summary                                
+Equation                                      RMS Res     Max Res    Global ID
+-------------------------------------------------------------------------------
+pbns-cpld/pressure                           1.096e-06   8.620e-06         405
+pbns-cpld/velocity-0                         7.300e-06   5.672e-05         373
+pbns-cpld/velocity-1                         6.878e-06   5.213e-05         381
+pbns-cpld/velocity-2                         8.972e-06   1.043e-04         380
+turb-seg/tke                                 1.438e-07   1.279e-06         610
+turb-seg/tef                                 1.036e-06   1.044e-05         377
+
+                   Maximum Residual Location (cell centroid)
+-------------------------------------------------------------------------------
+pbns-cpld/pressure                           [ 4.690e-04  2.337e-04 -4.463e-03]
+pbns-cpld/velocity-0                         [ 4.200e-05  4.792e-05 -3.086e-03]
+pbns-cpld/velocity-1                         [ 8.440e-05  2.522e-04 -3.119e-03]
+pbns-cpld/velocity-2                         [ 7.649e-05  2.113e-04 -3.365e-03]
+turb-seg/tke                                 [ 3.900e-03  8.820e-05 -3.698e-03]
+turb-seg/tef                                 [ 4.133e-05  2.053e-04 -3.139e-03]
+-------------------------------------------------------------------------------
+
+===============================================================================
+                              Wall Clock Time Summary
+Module                                        Time (s)           Percent
+-------------------------------------------------------------------------------
+mesh                                          8.19e-003            0.6%
+pbns-cpld                                     6.00e-001           40.5%
+turb-seg                                      2.46e-001           16.6%
+miscellaneous                                 6.55e-001           44.2%
+
+Total 'Wall Clock Time'                       1.48e+000          100.0%
+-------------------------------------------------------------------------------
+

@@ -23,7 +23,7 @@ Here is a table of how many replicates have been done on each disk. The columns 
 
 
 ```{r Importing and manipulating data, echo=FALSE}
-spins <- read.xlsx2("J:/groups/bloodfilter/CliftonAnderson/Spinning.xlsx",sheetIndex = 2,colClasses=NA)
+spins <- read.xlsx2("C:/Users/cdhig/Documents/MS-Thesis-Pitt/Data-analysis/Spinning.xlsx",sheetIndex = 2,colClasses=NA)
 spins$HCT_plas[1] <- NaN
 spins$g_trough[1] <- NaN
 spins$g_wiped[1] <- NaN
@@ -72,6 +72,39 @@ spins$RBCRecovery    <- with(spins,{VFlowdown*VolFracPlasma*HCT_plas/(VolWB*HCT)
 spins$PlasmaRecovery <- with(spins,{VFlowdown*(1-HCT_plas)/(VolPBS+VolWB*(1-HCT))*100})
 ```
 
+```{r plasma recovery for disks with 8 ruffles vs 16 ruffles}
+Nruffles <- subset(spins,grepl('20.05_[0-9]{1,2}x3[long]{0,4}_glossy_4mL',spins$Disk) & HCT<=0.55)
+ggplot(Nruffles,aes(HCT,PlasmaRecovery,color=Disk))+geom_point()
+ggplot(Nruffles,aes(HCT,VFlowdown,color=Disk))+geom_point()
+
+```
+
+```{r disks with 8 ruffles}
+ruffles8 <- spins %>% filter(as.Date(Date)==as.Date('2019-4-9')) %>%
+                             select(.,Disk,PlasmaRecovery,HCT_plas,VFlowdown)
+ruffles8$Donor <- c(1,1,1,1,1,1,2,2,2,2,2)
+
+short = c(7,3,4,7,8,4)
+long = c(8,8,8,8,3,8)
+donor = c(1,2,1,2,1,2,2,1,2,1,2,1)
+channels <- data.frame(Disk=gl(2,6,labels=c('8 normal','8 long')),Breakthrough_points=c(short,long),Donor=as.character(donor))
+
+ggplot(channels,aes(Disk,Breakthrough_points,color=Donor,size=5))+geom_jitter(width=0.05)+theme_minimal()
+
+ruffsum <- ruffles8 %>% group_by(Disk,Donor) %>% summarise(n=n(),SD=sd(VFlowdown))
+with(ruffsum,(n-1)*SD)
+# Pooled SD equation
+# lapply( split(ruffsum,ruffsum$Donor),function(dd) sqrt( sum(dd$SD^2 *(dd$n-1))/(sum(dd$n-1)-nrow(dd)) ))
+```
+
+```{r moat disk comparison}
+moat <- subset(spins,as.Date(Date)=='2019-4-16')
+moataov <- lm(PlasmaRecovery~Disk+Donor,data=moat)
+summary(moataov)
+ggplot(moat,aes(Disk,VFlowdown,color=as.factor(HCT)))+geom_point()
+ggplot(moat,aes(Disk,PlasmaRecovery,color=as.factor(HCT)))+geom_point()
+ggplot(moat,aes(Disk,RBCRecovery,color=as.factor(HCT)))+geom_jitter(width=0.05)+ylab('Red cell recovery (%)')
+```
 
 ```{r Plotting, echo=FALSE}
 ggplot(spins,aes(Disk,PlasmaRecovery,color=Glossy))+

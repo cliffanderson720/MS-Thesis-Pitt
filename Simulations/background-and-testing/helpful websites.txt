@@ -1,2 +1,6 @@
 http://hplgit.github.io/primer.html/doc/pub/oo/._oo-readable003.html
 Explains using classes for numerical problems
+
+https://www3.nd.edu/~dbalsara/Numerical-PDE-Course/ch3/Chp3_LinAdvect.pdf
+Sections 3.4.1-4 explain the Riemann problem and the characteristic decomposition (eigenspace)
+that gives the characteristic wave speeds.

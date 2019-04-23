@@ -1,0 +1,290 @@
+    *-------------------------------------------------------------*
+    *-------------------------------------------------------------*
+    |                                                             |
+        Command line arguments: 
+    |  W E L C O M E   T O   T H E   A N S Y S (R)  P R O G R A M |
+            -intputFile C:\Users\cma86\AppData\Local\Temp\proxy_input711642078.xml
+    |                                                             |
+            -parentHost 127.0.0.1
+    *-------------------------------------------------------------*
+            -parentPort 62495
+    ***************************************************************
+    *-------------------------------------------------------------*
+    *                  ANSYS 18.1 LEGAL NOTICES                   *
+    ***************************************************************
+    *                                                             *
+    * Copyright 2016 SAS IP, Inc.  All rights reserved.           *
+    * Unauthorized use, distribution or duplication is            *
+    * prohibited.                                                 *
+    * ANSYS is a registered trademark of ANSYS, Inc or its        *
+    * subsidiaries in the United States or other countries.       *
+    *                                                             *
+    * ANSYS, Inc. is UL registered                                *
+    * ISO 9001:2008 Companies.                                    *
+    *                                                             *
+    ***************************************************************
+    *                                                             *
+    * THIS ANSYS SOFTWARE PRODUCT AND PROGRAM DOCUMENTATION       *
+    * INCLUDE TRADE SECRETS AND CONFIDENTIAL AND PROPRIETARY      *
+    * PRODUCTS OF ANSYS, INC., ITS SUBSIDIARIES, OR LICENSORS.    *
+    * The software products and documentation are furnished by    *
+    * ANSYS, Inc. or its subsidiaries under a software license    *
+    * agreement that contains provisions concerning               *
+    * non-disclosure, copying, length and nature of use,          *
+    * compliance with exporting laws, warranties, disclaimers,    *
+    * limitations of liability, and remedies, and other           *
+    * provisions.  The software products and documentation may be *
+    * used, disclosed, transferred, or copied only in accordance  *
+    * with the terms and conditions of that software license      *
+    * agreement.                                                  *
+    *                                                             *
+    * See the ANSYS, Inc. online documentation or the ANSYS, Inc. *
+    * documentation CD for the complete Legal Notice.             *
+    *                                                             *
+    ***************************************************************
+    *                                                             *
+    * This product is subject to US laws governing export and     *
+    * re-export.                                                  *
+    *                                                             *
+    * For U.S. Government users, except as specifically granted   *
+    * by the ANSYS, Inc. software license agreement, the use,     *
+    * duplication, or disclosure by the United States Government  *
+    * is subject to restrictions stated in the ANSYS, Inc.        *
+    * software license agreement and FAR 12.212 (for non-DOD      *
+    * licenses).                                                  *
+    *                                                             *
+    ***************************************************************
+    Version No 18,2017,101,1
+
+    Using default 10 (s) timeout when starting participant:  AFD
+    Chart /Study/MonitorChart:MonitorChart 1 has iter as PrimaryTracker
+ 
+    Connection made to:  AFD
+
+    Received new front end connection
+
+    Loading resource file for the trackers :  C:\Program Files\ANSYS Inc\v181\Addins\AIM\bin\Win64\SolverInventory\AfdTrackerDescriptors.xml
+    Loading resource file for the events :  C:\Program Files\ANSYS Inc\v181\Addins\AIM\bin\Win64\SolverInventory\AfdTrackerDescriptors.xml
+
+    Successfully registered solver AFD
+    Tracker continuity received:  2.280646e-001
+    Tracker iter received:  1.000000e+000
+    Tracker xvelocity received:  3.586463e-002
+    Tracker yvelocity received:  6.003349e-003
+    Tracker zvelocity received:  4.933356e-002
+
+    Begin monitoring
+    Tracker continuity received:  2.970411e-002
+    Tracker iter received:  2.000000e+000
+    Tracker xvelocity received:  3.552125e-002
+    Tracker yvelocity received:  6.857605e-003
+    Tracker zvelocity received:  4.805241e-002
+    Tracker continuity received:  9.293185e-003
+    Tracker iter received:  3.000000e+000
+    Tracker xvelocity received:  2.804858e-002
+    Tracker yvelocity received:  5.515130e-003
+    Tracker zvelocity received:  3.575898e-002
+    Tracker continuity received:  3.967074e-003
+    Tracker iter received:  4.000000e+000
+    Tracker xvelocity received:  1.998807e-002
+    Tracker yvelocity received:  5.277245e-003
+    Tracker zvelocity received:  2.513068e-002
+    Tracker continuity received:  3.264229e-003
+    Tracker iter received:  5.000000e+000
+    Tracker xvelocity received:  1.540883e-002
+    Tracker yvelocity received:  4.897475e-003
+    Tracker zvelocity received:  1.691238e-002
+    Tracker continuity received:  2.112295e-003
+    Tracker iter received:  6.000000e+000
+    Tracker xvelocity received:  1.041756e-002
+    Tracker yvelocity received:  3.968860e-003
+    Tracker zvelocity received:  1.140458e-002
+    Tracker continuity received:  2.581709e-003
+    Tracker iter received:  7.000000e+000
+    Tracker xvelocity received:  7.017387e-003
+    Tracker yvelocity received:  3.245952e-003
+    Tracker zvelocity received:  8.213239e-003
+    Tracker continuity received:  1.987233e-003
+    Tracker iter received:  8.000000e+000
+    Tracker xvelocity received:  6.225017e-003
+    Tracker yvelocity received:  2.812673e-003
+    Tracker zvelocity received:  6.203092e-003
+    Tracker continuity received:  1.525945e-003
+    Tracker iter received:  9.000000e+000
+    Tracker xvelocity received:  4.816546e-003
+    Tracker yvelocity received:  2.533489e-003
+    Tracker zvelocity received:  4.752833e-003
+    Tracker continuity received:  1.118475e-003
+    Tracker iter received:  1.000000e+001
+    Tracker xvelocity received:  3.633451e-003
+    Tracker yvelocity received:  2.220542e-003
+    Tracker zvelocity received:  3.924556e-003
+    Tracker continuity received:  7.917334e-004
+    Tracker iter received:  1.100000e+001
+    Tracker xvelocity received:  2.923274e-003
+    Tracker yvelocity received:  1.922442e-003
+    Tracker zvelocity received:  3.236261e-003
+    Tracker continuity received:  5.651804e-004
+    Tracker iter received:  1.200000e+001
+    Tracker xvelocity received:  2.429797e-003
+    Tracker yvelocity received:  1.604554e-003
+    Tracker zvelocity received:  2.732534e-003
+    Tracker continuity received:  4.295523e-004
+    Tracker iter received:  1.300000e+001
+    Tracker xvelocity received:  2.002501e-003
+    Tracker yvelocity received:  1.279744e-003
+    Tracker zvelocity received:  2.317978e-003
+    Tracker continuity received:  3.386031e-004
+    Tracker iter received:  1.400000e+001
+    Tracker xvelocity received:  1.641779e-003
+    Tracker yvelocity received:  1.013154e-003
+    Tracker zvelocity received:  1.967537e-003
+    Tracker continuity received:  2.647192e-004
+    Tracker iter received:  1.500000e+001
+    Tracker xvelocity received:  1.335191e-003
+    Tracker yvelocity received:  8.585438e-004
+    Tracker zvelocity received:  1.665924e-003
+    Tracker continuity received:  2.101279e-004
+    Tracker iter received:  1.600000e+001
+    Tracker xvelocity received:  1.080666e-003
+    Tracker yvelocity received:  7.437528e-004
+    Tracker zvelocity received:  1.406863e-003
+    Tracker continuity received:  1.679669e-004
+    Tracker iter received:  1.700000e+001
+    Tracker xvelocity received:  8.726387e-004
+    Tracker yvelocity received:  6.461879e-004
+    Tracker zvelocity received:  1.183124e-003
+    Tracker continuity received:  1.347296e-004
+    Tracker iter received:  1.800000e+001
+    Tracker xvelocity received:  7.037638e-004
+    Tracker yvelocity received:  5.551671e-004
+    Tracker zvelocity received:  9.916757e-004
+    Tracker continuity received:  1.072256e-004
+    Tracker iter received:  1.900000e+001
+    Tracker xvelocity received:  5.665561e-004
+    Tracker yvelocity received:  4.736456e-004
+    Tracker zvelocity received:  8.285406e-004
+    Tracker continuity received:  8.610353e-005
+    Tracker iter received:  2.000000e+001
+    Tracker xvelocity received:  4.556645e-004
+    Tracker yvelocity received:  3.948107e-004
+    Tracker zvelocity received:  6.897806e-004
+    Tracker continuity received:  7.025008e-005
+    Tracker iter received:  2.100000e+001
+    Tracker xvelocity received:  3.692370e-004
+    Tracker yvelocity received:  3.241629e-004
+    Tracker zvelocity received:  5.723065e-004
+    Tracker continuity received:  5.739597e-005
+    Tracker iter received:  2.200000e+001
+    Tracker xvelocity received:  2.967695e-004
+    Tracker yvelocity received:  2.630317e-004
+    Tracker zvelocity received:  4.741831e-004
+    Tracker continuity received:  4.668269e-005
+    Tracker iter received:  2.300000e+001
+    Tracker xvelocity received:  2.395425e-004
+    Tracker yvelocity received:  2.131328e-004
+    Tracker zvelocity received:  3.920082e-004
+    Tracker continuity received:  3.778168e-005
+    Tracker iter received:  2.400000e+001
+    Tracker xvelocity received:  1.939049e-004
+    Tracker yvelocity received:  1.740457e-004
+    Tracker zvelocity received:  3.230984e-004
+    Tracker continuity received:  3.037891e-005
+    Tracker iter received:  2.500000e+001
+    Tracker xvelocity received:  1.573010e-004
+    Tracker yvelocity received:  1.433754e-004
+    Tracker zvelocity received:  2.656282e-004
+    Tracker continuity received:  2.445824e-005
+    Tracker iter received:  2.600000e+001
+    Tracker xvelocity received:  1.279325e-004
+    Tracker yvelocity received:  1.191125e-004
+    Tracker zvelocity received:  2.178293e-004
+    Tracker continuity received:  1.987063e-005
+    Tracker iter received:  2.700000e+001
+    Tracker xvelocity received:  1.043700e-004
+    Tracker yvelocity received:  9.961304e-005
+    Tracker zvelocity received:  1.781883e-004
+    Tracker continuity received:  1.638951e-005
+    Tracker iter received:  2.800000e+001
+    Tracker xvelocity received:  8.543437e-005
+    Tracker yvelocity received:  8.354900e-005
+    Tracker zvelocity received:  1.454374e-004
+    Tracker continuity received:  1.371719e-005
+    Tracker iter received:  2.900000e+001
+    Tracker xvelocity received:  7.019156e-005
+    Tracker yvelocity received:  7.016223e-005
+    Tracker zvelocity received:  1.184893e-004
+    Tracker continuity received:  1.155245e-005
+    Tracker iter received:  3.000000e+001
+    Tracker xvelocity received:  5.789313e-005
+    Tracker yvelocity received:  5.899506e-005
+    Tracker zvelocity received:  9.641236e-005
+    Tracker continuity received:  9.705762e-006
+    Tracker iter received:  3.100000e+001
+    Tracker xvelocity received:  4.794455e-005
+    Tracker yvelocity received:  4.968210e-005
+    Tracker zvelocity received:  7.840428e-005
+    Tracker continuity received:  8.099807e-006
+    Tracker iter received:  3.200000e+001
+    Tracker xvelocity received:  4.008369e-005
+    Tracker yvelocity received:  4.191977e-005
+    Tracker zvelocity received:  6.373815e-005
+    Tracker continuity received:  6.800443e-006
+    Tracker iter received:  3.300000e+001
+    Tracker xvelocity received:  3.427933e-005
+    Tracker yvelocity received:  3.541385e-005
+    Tracker zvelocity received:  5.182236e-005
+    Tracker continuity received:  5.630229e-006
+    Tracker iter received:  3.400000e+001
+    Tracker xvelocity received:  2.884314e-005
+    Tracker yvelocity received:  3.009186e-005
+    Tracker zvelocity received:  4.221807e-005
+    Tracker continuity received:  4.618204e-006
+    Tracker iter received:  3.500000e+001
+    Tracker xvelocity received:  2.433987e-005
+    Tracker yvelocity received:  2.559352e-005
+    Tracker zvelocity received:  3.455803e-005
+    Tracker continuity received:  3.675768e-006
+    Tracker iter received:  3.600000e+001
+    Tracker xvelocity received:  2.019017e-005
+    Tracker yvelocity received:  2.169171e-005
+    Tracker zvelocity received:  2.830329e-005
+    Tracker continuity received:  2.999005e-006
+    Tracker iter received:  3.700000e+001
+    Tracker xvelocity received:  1.736186e-005
+    Tracker yvelocity received:  1.812185e-005
+    Tracker zvelocity received:  2.337196e-005
+    Tracker continuity received:  2.456904e-006
+    Tracker iter received:  3.800000e+001
+    Tracker xvelocity received:  1.472648e-005
+    Tracker yvelocity received:  1.503426e-005
+    Tracker zvelocity received:  1.930865e-005
+    Tracker continuity received:  1.970145e-006
+    Tracker iter received:  3.900000e+001
+    Tracker xvelocity received:  1.228522e-005
+    Tracker yvelocity received:  1.238655e-005
+    Tracker zvelocity received:  1.591373e-005
+    Tracker continuity received:  1.598965e-006
+    Tracker iter received:  4.000000e+001
+    Tracker xvelocity received:  1.033425e-005
+    Tracker yvelocity received:  1.013080e-005
+    Tracker zvelocity received:  1.313375e-005
+    Tracker continuity received:  1.317967e-006
+    Tracker iter received:  4.100000e+001
+    Tracker xvelocity received:  8.691872e-006
+    Tracker yvelocity received:  8.306008e-006
+    Tracker zvelocity received:  1.085025e-005
+    Tracker continuity received:  1.095994e-006
+    Tracker iter received:  4.200000e+001
+    Tracker xvelocity received:  7.300258e-006
+    Tracker yvelocity received:  6.878350e-006
+    Tracker zvelocity received:  8.971590e-006
+    Informing participant [AFD] that it can exit
+    Number of steps monitored: 40
+
+    All participants have completed
+    Saving Database
+    Disconnecting server...
+    Server disconnected
+
+    Finished
