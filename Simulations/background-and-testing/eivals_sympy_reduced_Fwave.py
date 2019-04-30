@@ -58,13 +58,14 @@ alpha
 
 
 # convert sympy objects into ufuncs for evaluating with numpy
-alphafunc = lambdify((p1l,p1r,p1_ave,p2l,p2r,p2_ave,a2,n),alpha,'numpy')
-betafunc = lambdify((p1l,p1r,p1_ave,p2l,p2r,p2_ave,a2,n),beta,'numpy')
-Rfunc = lambdify((p1,p2,a2,n),R,'numpy')
+alphafunc = sp.lambdify((p1l,p1r,p1_ave,p2l,p2r,p2_ave,a2,n),alpha,'numpy')
+betafunc = sp.lambdify((p1l,p1r,p1_ave,p2l,p2r,p2_ave,a2,n),beta,'numpy')
+Rfunc = sp.lambdify((p1,p2,a2,n),R,'numpy')
 
 #%% plot eigenvalues ----------------------------------------------------------
 import numpy as np
 import matplotlib.pyplot as plt
+###### Plot each as f(r2) r2 = [0.0001,0.01,0.05,0.1,0.25]
 a2 = 1/30.
 nr = 101
 r1 = np.linspace(0,1.0,nr)
