@@ -145,11 +145,15 @@ def stokes(RPM,r,cell_radius,cell_density,rho_f=1024,visc=.0026,mode=None):
                 speed[j,:] = accel*(2*(cell_density[j]-rho_f)*cell_radius[j]**2)/(9*visc)
 
         except TypeError: # exception case where r is a scalar
-            ncells   = len(cell_radius)
-            speed = np.empty(ncells)
-            for j in range(ncells):
-                speed[j] = accel*(2*(cell_density[j]-rho_f)*cell_radius[j]**2)/(9*visc)
-                    
+            try:
+                ncells = len(cell_radius)
+                speed = np.empty(ncells)
+                for j in range(ncells):
+                    speed[j] = accel*(2*(cell_density[j]-rho_f)*cell_radius[j]**2)/(9*visc)
+            
+            except TypeError: # only 1 cell type
+                speed = accel*(2*(cell_density-rho_f)*cell_radius**2)/(9*visc)
+            
     return speed
 
 
@@ -271,13 +275,13 @@ def van_wie_(Ctot,den,rad,S,visc):
     return force*del_rho*hinder
 
 ### Setting up concentration arrays to test the porosity function
-conc1a = np.linspace(0,.5,6)
-concs = np.empty((2,len(conc1a)))
-concs = np.array([conc1a for i in range(2)])
+# conc1a = np.linspace(0,.5,6)
+# concs = np.empty((2,len(conc1a)))
+# concs = np.array([conc1a for i in range(2)])
                 
-#porosity(concs)
-plt.plot(concs.T,porosity(concs,power=2.71).T)
-plt.legend(radius.keys())
+# #porosity(concs)
+# plt.plot(concs.T,porosity(concs,power=2.71).T)
+# plt.legend(radius.keys())
 ####
 
 #RPMs = np.linspace(0,8000)
