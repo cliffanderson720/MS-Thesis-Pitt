@@ -93,7 +93,6 @@ RIint = np.array([Rfunc(r1i,r2,a2_,m) for r1i in rint])
 # Characteristic transform
 Ris = np.array([Rifunc(r1i,r2,a2_,m) for r1i in r1])
 
-
 # wave strengths computed from Ri*p
 Ws = np.array([Wfunc(r1i,r2,a2_,m) for r1i in rint])
 W1 = Ws[:,0]
@@ -110,45 +109,87 @@ species2  = dict(linestyle='-',color='red',label='2')
 species12 = dict(linestyle='--',color='blue',label='12')
 species21 = dict(linestyle='--',color='red',label='21')
 
-# fig,ax = plt.subplots(nrows=6,sharex=True,figsize=(8,10))
-# ax[0].plot(r1,lam1,**species1)
-# ax[0].plot(r1,lam2,**species2)
-# # ax[0].plot(r1,lam1+lam2)
-# ax[0].set_ylabel(f'Eigenvalue: $\lambda$')
-# ax[0].legend(['$\lambda_1$',f'$\lambda_2$'])
-#
-# ax[1].plot(r1,RI[:,0,0],**species1)
-# ax[1].plot(r1,RI[:,0,1],**species12)
-# ax[1].legend(['$r^1 \phi_1$','$r^2 \phi_1$'])
-# lim = 2
-# ax[1].set_ylim([-lim,lim])
-# ax[1].set_ylabel('$\phi_1$  in R')
-#
-# ax[2].plot(rint,W1,**species1)
-# ax[2].plot(rint,W2,**species2)
-# ax[2].set_ylabel('Wave strength (w)')
-# ax[2].legend(('$w_1$','$w_2$'))
-#
-# ax[3].plot(r1[:-1],beta1,**species1)
-# ax[3].plot(r1[:-1],beta2,**species2)
-# ax[3].set_ylabel('$\Delta$F wave strength $\\beta$')
-#
-# ax[4].plot(r1[:-1],RI[:-1,0,0]*beta1,**species1)
-# ax[4].plot(r1[:-1],RI[:-1,0,1]*beta2,**species12)
-# ax[4].plot(r1[:-1],RI[:-1,1,0]*beta1,**species2)
-# ax[4].plot(r1[:-1],RI[:-1,1,1]*beta2,**species21)
-# ax[4].set_ylabel('F waves')
-#
-# ax[5].plot(rint,RI[:,0,0]*W1,**species1)
-# ax[5].plot(rint,RI[:,0,1]*W2,**species12)
-# ax[5].plot(rint,RI[:,1,0]*W1,**species2)
-# ax[5].plot(rint,RI[:,1,1]*W2,**species21)
-# ax[5].set_ylabel(f'Wave strength (w)*$\\lambda$')
-# ax[5].legend(('$w_1$','$w_2$'))
-#
-# [ax.axhline(y=0,linestyle='--',color='black',linewidth=0.5) for ax in ax]
-# plt.xlabel('Species 1')
-# plt.xlim([min(r1),max(r1)]);
+fig,ax = plt.subplots(nrows=6,sharex=True,figsize=(8,10))
+ax[0].plot(r1,lam1,**species1)
+ax[0].plot(r1,lam2,**species2)
+# ax[0].plot(r1,lam1+lam2)
+ax[0].set_ylabel(f'Eigenvalue: $\lambda$')
+ax[0].legend(['$\lambda_1$',f'$\lambda_2$'])
+
+ax[1].plot(r1,RI[:,0,0],**species1)
+ax[1].plot(r1,RI[:,0,1],**species12)
+ax[1].legend(['$r^1 \phi_1$','$r^2 \phi_1$'])
+lim = 2
+ax[1].set_ylim([-lim,lim])
+ax[1].set_ylabel('$\phi_1$  in R')
+
+ax[2].plot(rint,W1,**species1)
+ax[2].plot(rint,W2,**species2)
+ax[2].set_ylabel('Wave strength (w)')
+ax[2].legend(('$w_1$','$w_2$'))
+
+ax[3].plot(r1[:-1],beta1,**species1)
+ax[3].plot(r1[:-1],beta2,**species2)
+ax[3].set_ylabel('$\Delta$F wave strength $\\beta$')
+
+ax[4].plot(r1[:-1],RI[:-1,0,0]*beta1,**species1)
+ax[4].plot(r1[:-1],RI[:-1,0,1]*beta2,**species12)
+ax[4].plot(r1[:-1],RI[:-1,1,0]*beta1,**species2)
+ax[4].plot(r1[:-1],RI[:-1,1,1]*beta2,**species21)
+ax[4].set_ylabel('F waves')
+
+ax[5].plot(rint,RI[:,0,0]*W1,**species1)
+ax[5].plot(rint,RI[:,0,1]*W2,**species12)
+ax[5].plot(rint,RI[:,1,0]*W1,**species2)
+ax[5].plot(rint,RI[:,1,1]*W2,**species21)
+ax[5].set_ylabel(f'Wave strength (w)*$\\lambda$')
+ax[5].legend(('$w_1$','$w_2$'))
+
+[ax.axhline(y=0,linestyle='--',color='black',linewidth=0.5) for ax in ax]
+plt.xlabel('Species 1')
+plt.xlim([min(r1),max(r1)]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #%%
 F11 = RIint[:,0,0]*beta1
