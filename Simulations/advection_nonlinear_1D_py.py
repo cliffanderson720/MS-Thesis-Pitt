@@ -5,10 +5,10 @@ Riemann solvers for a sedimentation problem
 """
 
 from __future__ import absolute_import
-import numpy as np
 from six.moves import range
+import numpy as np
 import matplotlib.pyplot as plt
-
+import velocity_functions as vf
 # num_eqn = 2
 # num_waves = 2
 
@@ -33,17 +33,23 @@ def abs_flux(r,u_rel,hsc=None):
     # calculate hindered settling correlation
     hsc = (1-np.sum(r,axis=axis))**2
 
-    if r.ndim > 1: #
+    if r.ndim > 1:
         # Do this for (1-r1-r2)**2. make hsc for each species.
         hsc = np.column_stack([hsc for col in range(r.shape[1])])
         cslip = u_rel*hsc
         cab = cslip - np.sum(r*cslip,axis=axis)[:,np.newaxis]
+
     elif r.ndim == 1:
         cslip = u_rel*hsc
         cab = cslip - np.sum(r*cslip)
         # cab = hsc*(np.ones_like(r)*a-np.sum(a*r,axis=1)[:,np.newaxis]) This one works but sucks
     else:
         print(f'dimenstion error in abs_flux. Array r has shape {r.shape}')
+
+    if (r<0).any(): # give compact support
+        print('volume fraction <0')
+        r[r<0]=0
+
     qab = r*cab
     return qab
 
@@ -79,8 +85,9 @@ def getJac(func,x,*args,**kwargs) :
 
     return J
 
-# a = np.array([1,1/30.])
-# rL = np.array([0.4,0.1])
+a = np.array([1,1/30.])
+rL = np.array([0.4,0.1])
+abs_flux(rL,a,m)
 # rR = np.array([-0.95,-0.01])
 # r = np.column_stack([rL,rR])
 # r
