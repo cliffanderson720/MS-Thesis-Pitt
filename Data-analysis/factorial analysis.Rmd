@@ -1,0 +1,119 @@
+---
+title: "Factorial analysis"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+
+```{r load libraries and import data, echo=FALSE}
+library(ggplot2)
+library(dplyr)
+library(xlsx)
+library(car)
+library(RcmdrMisc)
+library(pwr)
+
+raw <- read.xlsx("G:/Documents/MS-Thesis-Pitt/Data-analysis/Spinning.xlsx",
+                 sheetIndex = 2,
+                 colClasses = NA)
+
+raw$BR <- raw$bac_recovery*100
+raw$logBR <- log(raw$BR)
+raw <- filter(raw,bac_recovery != is.na(bac_recovery)) #bac_recovery>0.2)
+raw$Hold_time.num <- raw$Hold_time-mean(raw$Hold_time)
+raw$HCT_diluted.num <- raw$HCT_diluted-mean(raw$HCT_diluted)
+raw$Hold_time <- factor(x=raw$Hold_time)#,ordered=TRUE)
+raw$HCT_diluted <- factor(x=raw$HCT_diluted)#,ordered=TRUE)
+
+
+# plot results
+raw.sum <- raw %>% 
+  group_by(HCT_diluted,Hold_time)  %>%
+  summarise(n=n(),
+            BR.mean=mean(BR),
+            SD = sd(BR))
+
+raw.sum
+ggplot(raw,aes(HCT_diluted,BR,color=Hold_time,shape=Donor))+geom_jitter(width=0.05)+ylim(ymin=0,ymax=100)
+ggplot(raw,aes(HCT_diluted,conc_recovery))+geom_point()+facet_grid(.~Hold_time)
+with(raw,plotMeans(BR,HCT_diluted,Hold_time,error.bars='conf.int'))
+```
+Mashsa saw that plasma recovery was higher with short times.
+
+```{r Linear models for BR}
+# play with factors
+contrasts(raw$Hold_time) <- 'contr.sum' #contr.treatment(n=3,base=2) #contr.sum(n=3)
+contrasts(raw$HCT_diluted) <- 'contr.sum' #contr.treatment(n=3,base=2) #contr.sum(n=3)
+contrasts(raw$Donor) <- 'contr.sum'
+
+# do linear model (with or without outliers)
+inliers <- raw[-c(11,39,41),]
+
+pairs(dplyr::select(inliers,c(Hold_time,HCT_diluted,BR,conc_recovery,gplas_tot)),
+      col=c('blue','green','red')[inliers$HCT_diluted])
+
+BR.lm.i <- lm(BR~Hold_time*HCT_diluted+Donor,data=inliers); summary(BR.lm.i)
+#BR.lm.a <- lm(BR~Hold_time+HCT_diluted+Donor,data=raw); summary(BR.lm.a)
+Anova(BR.lm.i,type='II')
+```
+
+
+```{r BR Diagnostics}
+pwr.f2.test(u=13,sig.level=0.01,f2=0.64/(1-0.64),power=0.99)
+
+termplot(BR.lm.i,partial.resid = TRUE,ask=FALSE,col.res =c('green','blue','red','black','pink','purple')[raw$Donor],ylim = c(-25,25))
+with(BR.lm.i,plot(fitted.values,residuals,col=c('green','blue','red')[as.numeric(raw$Hold_time)]))
+```
+## Commentary
+From partial residual plots, the donor makes a big difference.
+
+
+
+```{r Concentration recovery models}
+ggplot(inliers,aes(Hold_time.num,conc_recovery,color=HCT_diluted))+geom_point()+geom_smooth(method='lm',se=F)
+ggplot(inliers,aes(HCT_diluted.num,conc_recovery,color=Hold_time))+geom_point()+geom_smooth(method='lm',se=F)
+
+
+CR.lm.poly  <- lm(conc_recovery~Hold_time*HCT_diluted+Donor,
+             data=inliers,
+             contrasts=list(Hold_time='contr.poly',
+                            HCT_diluted='contr.poly',
+                            Donor='contr.sum'))
+summary(CR.lm.poly)
+# I need to either research polynomial contrasts more, or else convert time and HCT to continuous.
+# maybe I need to center these. How can I look at VIF?
+CR.lm.num <- lm(conc_recovery~Donor+Hold_time.num*HCT_diluted.num,data=raw)
+summary(CR.lm.num)
+Anova(CR.lm.num,type=2)
+```
+
+Significant positive linear interaction between hold time and hematocrit.
+
+for facet_grid(Hold_Time~.):
+At low hold time,  increasing the hematocrit decreases the concentration recovery.
+At high hold time, increasing the hematocrit increases the concentration recovery.
+
+At low hematocrit, increasing hold time decreases concentration recovery
+At high hematocrit,increasing hold time increases concentration recovery
+ > More plasma backflow
+
+
+
+
+
+
+```{r setting up data frame and plotting results}
+HCT = factor(c(1,0,1,-1,0,-1,-1,0,1),ordered=TRUE)
+time= factor(c(0,-1,-1,-1,1,0,1,0,1),ordered=TRUE)
+Bac_sc = c(35,48,33,61,42,46,57,43,32)
+Bac_mc = c(35,44,35,63,41,44,61,38,35)
+df <- data.frame(HCT=HCT,
+                 time=time,
+                 Bac_sc=Bac_sc,
+                 Bac_mc=Bac_mc)
+
+ggplot(df,aes(HCT,Bac_sc,color=time))+geom_point()
+
+BR.lm <- lm(Bac_sc ~ time+HCT,data=df);summary(BR.lm)
+```

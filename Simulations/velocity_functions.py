@@ -109,7 +109,7 @@ def stokes_old(RPM,r,cell_radius,cell_density,rho_f=1024,visc=.0026,mode=None, *
 
     return speed
 
-def stokes(RPM,r,cell_radius,cell_density,rho_f=1024,visc=.0026,mode=None):
+def stokes(RPM,r,cell_radius,cell_density,rho_f=1024,visc=.0012,mode=None):
     '''
     Calculates the stokes velocity in m/s for j particle types
     -------------------------------------------------------------------------
@@ -234,13 +234,20 @@ def porosity(concs,power=1,radii=(3.75e-6,2.5e-6)):
 
     return porosity.T**power
 
-def michaels(a,n,amax=0.95):
+def michaels(a,n=2.71,amax=0.95,slip=True):
     '''
     Michaels bolger correction used in Lerche's 2001 paper.
-    See Michaels function.py in background-and-testing for graphing code
+    In the paper, it uses (1-a)**2 and is an absolute velocity.
+    In this module, I divide by (1-a) to make it a slip velocity.
     '''
-    return (1-a)**2*(1-a/amax)**(amax*n)
 
+    if slip==True:
+        return (1-a)*(1-a/amax)**(amax*n)
+    elif slip==False:
+        return (1-a)**2*(1-a/amax)**(amax*n)
+    else:
+        raise Exception('Incorrect type given for argument "slip"')
+        
 def EOflux(rhos):
     '''
     Returns the Engquist-Osher flux based on the derivative of the RZ correlation.

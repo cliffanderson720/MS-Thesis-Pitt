@@ -1,0 +1,74 @@
+---
+title: "Hematocrit"
+author: "Clifton Anderson"
+date: "May 14, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Hematocrit comparisons between clinical and out centrifuge
+Clinical centrifuge: 10,000xg for 5 minutes
+Our centrifuge: 1300xg for 10 minutes
+
+Variables:
+> HCT: nominal hematocrit based on assumption of gravity packing = 80%
+> clin.1: 1st spin in clinical centrifuge
+> clin.2: 2nd spin in clinical centrifuge
+> Pitt.1: 1 spin in Pitt centrifuge
+
+Female blood, 1 day old. Some red cells were congealed on pipetting.
+
+
+```{r Import and graph}
+library(ggplot2)
+library(dplyr)
+
+# Load table
+df_raw <- read.table('clinical_calibration_long.csv',header=TRUE,sep=',')
+
+# Plot results
+ggplot(df_raw,aes(HCT,HCT.meas,color=Centrifuge))+
+  geom_jitter(width=0.05)
+  # geom_smooth(method='lm',formula=y~x,se=FALSE)
+
+df <- df_raw %>% 
+  #filter(Centrifuge!='clin.1') %>% 
+  droplevels()
+
+# summarize group means
+means <- df %>% 
+          group_by(HCT,Centrifuge) %>% 
+          summarise(n=n(),
+                    HCT.mean=mean(HCT.meas),
+                    sd=sd(HCT.meas)) %>%
+          summarise(ratio=HCT.mean)
+          as.data.frame()
+
+# Set up linear model with interactions
+df$HCT <- as.factor(df$HCT)
+H.lm <- lm(HCT.meas ~ HCT*Centrifuge, data=df) ;summary(H.lm)
+```
+
+### Results
+A linear model says that Pitt overpredicts HCT by 1.642 (even with interactions). The interaction values are excess differences between Pitt and clin.2 (i.e. 1.6417-1.0750 = 0.5666. The Pitt centrifuge overestimated hematocrit by 0.5666 at H~20.)
+
+I want to make a more usable correlation between Pitt and clinical hematocrits
+
+
+```{r wide data}
+df_wide <- read.table('clinical_calibration.csv',header=TRUE,sep=',')
+df_wide
+
+ggplot(df_wide,aes(clin.2,Pitt.1))+geom_point()
+
+H.lm <- lm(Pitt.1~clin.2,data=filter(df_wide,HCT>=20));summary(H.lm)
+H.lm <- lm(Pitt.1~clin.2,data=filter(df_wide,HCT>20));summary(H.lm)
+
+
+```
+This model artificially pairs data, but the slope is useful. It says that Pitt hematocrit overpredicts true hematocrit by 5% +- 0.5
+
+I took ratios of group means in excel. see clinical_calibration_wide.csv

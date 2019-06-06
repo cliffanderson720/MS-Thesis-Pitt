@@ -13,8 +13,6 @@ library(ggplot2)
 library(dplyr)
 library(xlsx)
 library(car)
-
-
 ```
 
 ## Plots and ANOVA results
@@ -23,11 +21,13 @@ A model was fitted to consider the effects of (1) Drop location, (2) Liquid, and
 
 ```{r Data importing and manipulating}
 
-raw <- read.xlsx2('contact angles.xlsx',sheetIndex=1,colClasses = NA)
+raw <- read.xlsx2('C:/Users/cdhig/Documents/MS-Thesis-Pitt/Data-analysis/contact angles.xlsx',sheetIndex=1,colClasses = NA)
 printed <- raw[raw$Finish!='PP',]
 ggplot(printed,aes(x=Location,y=avg))+geom_point()+facet_grid(Liquid ~ Treatment)
 
+# Duplicate treatment for more descriptive factor name
 raw$CoatingType <- raw$Treatment 
+
 # Collapse the factor levels into the type of treatment
 levels(raw$CoatingType) <- list(plasma=c('blown3min.1', 'blown3min.2',
                                          'quick.dry', 'plas_coated'),
@@ -36,21 +36,35 @@ levels(raw$CoatingType) <- list(plasma=c('blown3min.1', 'blown3min.2',
                                 paa=   c('paa'),
                                 support=c('support'))
 
-TreatmentSum <- filter(raw,!Treatment %in% c('as is', 'plas_coated', 'paa', 'support', 'wiped_water') &
-                         !Finish %in% c('glass','matte'))
-TreatmentSum %>% group_by(CoatingType,Finish,Liquid) %>%
+# Remove unwanted factor levels
+TreatmentSum <- filter(raw,!Treatment %in% c('as is',  'paa', 'support', 'washed', 'wiped_water') &
+                         !Finish %in% c('glass','matte') &
+                          Time=='SS') %>%
+  select(.,Finish,Liquid,CoatingType,Treatment,avg) %>%
+  droplevels()
+
+# summarize group means 
+CAtable <- TreatmentSum %>% group_by(Finish,Liquid,CoatingType) %>%
   summarise(n=n(),
             Contact.Angle=mean(avg),
             SD = sd(avg),
-            'Cos(theta)'=cos(3.14159/180*Contact.Angle)) %>%
-  knitr::kable(.,caption='contact angle of water and plasma on clean and plasma coated surfaces')
+            'Cos(theta)'=cos(3.14159/180*Contact.Angle)) #%>%
+  # knitr::kable(.,
+               # caption='contact angle of water and plasma on clean and plasma coated surfaces',
+               # digits=c(0,0,0,0,1,1,3))
+
+
+CAtable
+# convert CA table to html for easy pasting into word.
+# htmlTable(txtRound(CAtable[,1:ncol(CAtable)],digits=c(0,0,1,0,1,1,3)))
 
 ```
 
 ```{r ANOVA stuff}
 drops <- raw
 drops$Location <- factor(drops$Location)
-drop.aov <- aov(avg ~ Location + Liquid + Treatment + Location*Liquid + Location*Treatment + Liquid*Treatment, data=drops)
+drop.aov <- lm(avg ~ Location*Liquid*Treatment, data=drops)
+
 summary(drop.aov)
 ```
 

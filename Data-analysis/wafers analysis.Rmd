@@ -8,7 +8,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2);library(dplyr);library(xlsx)
 require(stats)
 require(graphics)
-setwd('J:/groups/bloodfilter/CliftonAnderson')
+#setwd('J:/groups/bloodfilter/CliftonAnderson')
 ```
 
 # Wafer explanation
@@ -18,7 +18,9 @@ Cutout depth: None (0), 0.05 inch, 0.025 inch
 Wafer finish: glossy, matte
 
 ```{r wafer Importing and data manipulating}
-wafers <- read.xlsx('wafers.xlsx',colClasses = NA,sheetIndex=2)
+wafers <- read.xlsx('C:/Users/cdhig/Documents/MS-Thesis-Pitt/Data-analysis/wafers.xlsx',
+                    colClasses = NA,
+                    sheetIndex=2)
 wafers$WaferID <- paste(wafers$Ruffle,wafers$Depth,sep='')
 wafers$WaferID <- as.factor(wafers$WaferID)
 levels(wafers$WaferID) <- c('0.00','0.05','20.025','20.05','50.025','50.05','70.025','70.05')
@@ -77,14 +79,21 @@ ggplot(PEOmeoh,aes(x=Cycle,y=Angle,color=WaferID))+
 
 
 ```{r PEO-meoh Summary plotting }
-PEOsum <- PEOmeoh[PEOmeoh$Cycle<8,] %>% group_by(WaferID,Cycle) %>% summarise(n=n(),mean = mean(Angle),sd = sd(Angle),se=sd/sqrt(n))
+PEOsum <- PEOmeoh[PEOmeoh$Cycle!=8,] %>%
+  group_by(WaferID,Cycle) %>%
+  summarise(n=n(),
+            mean = mean(Angle),
+            sd = sd(Angle),
+            se = sd/sqrt(n),
+            ci = qt(1-0.025,n-1)*se)
 
 ggplot(PEOsum,aes(Cycle,mean,color=WaferID))+
   geom_point()+
   geom_line()+
   geom_errorbar(aes(ymin=mean-se,ymax=mean+se),na.rm=TRUE)+
   facet_wrap(~WaferID,ncol=4)+
-  ylab('Inclination angle')+ggsave('PEO_coating_summary.png')
+  ylab('Inclination angle')+
+  ggsave('PEO_coating_summary.png')
 
 ```
 
@@ -130,8 +139,8 @@ summary(clean.aov)
 plot(clean.aov,2)
 table(clean$Ruffle,clean$Depth)
 
-with(clean,{
-  pairwise.t.test(Angle,Depth,alternative='less')})
+with(clean,pairwise.t.test(Angle,Depth,alternative='less'))
+
 means <- group_by(wafers,Depth + Ruffle) %>%
   summarize(.,count=n(),angle=mean(Angle),se = sd(Angle)/sqrt(count))
 means

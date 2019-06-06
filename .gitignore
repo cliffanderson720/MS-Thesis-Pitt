@@ -2,7 +2,11 @@ photos/*
 Background/*
 Group-Meeting/*
 Writing/linux_refs.bib.bak
+Writing/*.docx
 Simulations/_output/*
-Writing/Prospectus*
 Data-analysis/JMP/*
 Data-analysis/*.Rdata
+Data-analysis/Spin Time/H*/
+*.MOV
+*.jpg
+*.Rhistory
