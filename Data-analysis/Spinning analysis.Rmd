@@ -1,63 +1,65 @@
 ---
 title: "Spinning"
 author: "Clifton Anderson"
-date: "July 24, 2018"
 output:
   html_document: default
 ---
-
+# Import libraries and data
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(latex2exp)
 library(xlsx)
 library(ggplot2)
 library(dplyr)
-#library(magrittr)
-#library(forcats)
-#library(broom)
 library(tidyr)
+library(multcomp)
+library(htmlTable)
+library(car)
 ```
-
-## Results from spinning whole blood on ruffled disks
-Here is a table of how many replicates have been done on each disk. The columns tell if the hematocrit of the whole blood was measured or not.
-
 
 ```{r Importing and manipulating data, echo=FALSE}
 spins <- read.xlsx2("G:/Documents/MS-Thesis-Pitt/Data-analysis/Spinning.xlsx",
-                    sheetIndex = 1,colClasses=NA)
+                    sheetIndex = 1,
+                    colClasses = NA)
 spins$Date <- as.Date(spins$Date)
 spins$HCT_plas[1] <- NaN
 spins$g_trough[1] <- NaN
-spins$g_wiped[1] <- NaN
-spins$Baffles  <-  grepl('16b',spins$Disk)
+spins$g_wiped[1]  <- NaN
+spins$LongWeir <- !spins$Disk %in% c('16b','base')
 spins$Glossy   <- !grepl('matte',spins$Disk)
+spins$Baffles  <-  grepl('16b',spins$Disk)
+spins$Ruffles  <-  grepl('[0-9]{1,2}x3[long]{0,4}',spins$Disk)
+spins$Wells    <-  grepl('[0-9]{2}x[7-9]{1}mm',spins$Disk)
+spins$Base     <-  grepl('base',spins$Disk)
+
 spins$VolWB  <- 7.0 + (spins$Trough.Volume-4)*(7.0/8.5) %>% round(.,2)
 spins$VolPBS <- 1.5 + (spins$Trough.Volume-4)*(1.5/8.5) %>% round(.,2)
 #spins$Trough.Volume <- as.factor(spins$Trough.Volume)
 table(spins$Disk,!is.na(spins$HCT))
 ```
-## RBC and plasma recovery
+
+# Derivations
 I have calculated the plasma recovery and red cell recovery using the following steps. I need to calculate the volume of the flowdown. If I chose not to dilute my blood with PBS, I would have a binary mixture of plasma and RBCs. Since I'm adding PBS though, I have a ternary mixture and cannot use the reference plasma density of 1024 $kg/m^3$. Because I can only obtain the volume fraction of red blood cells in the flowdown, I have an extra degree of freedom. To remove this, I will simplify this system back to binary by making a composite (i.e. solution) density between PBS and plasma as a function of their volumes.
 $$ m_{solution} = \rho_{PBS}V_{PBS} + \rho_{plasma}(1-HCT_{whole\;blood})V_{whole\;blood}$$
 $$ \rho_{solution} = \frac{m_{solution}}{V_{whole\;blood}(1-HCT_{whole\;blood})+V_{PBS}} $$
 The volume fraction of plasma in solution is
-$$\nu_{plasma} = \frac{V_{whole\;blood}(1-HCT_{whole\;blood})}{V_{whole\;blood}(1-HCT_{whole\;blood})+V_{PBS}}$$
+$$\nu_{plasma} = \frac{V_{whole\;blood}(1-HCT_{whole\;blood})}{V_{PBS}+V_{whole\;blood}(1-HCT_{whole\;blood})}$$
 The mass of the flowdown is measured directly. It can be represented as a ternary mixture $\sum{\rho_{i}V_{i}}, \;\;i=WB, plasma, PBS$ or as a binary mixture using the $\rho_{solution}$ just calculated. This latter approach will be used for the remainder of the derivation.
 $$ m_{flowdown} = \rho_{solution}V_{solution}+\rho_{RBC}V_{RBC} $$
 Moving to the next step require the intermediate values: $V_{solution} = V_{flowdown}(1-HCT_{flowdown})$ and $V_{RBC} = V_{flowdown}HCT_{flowdown}$. Substituting these values into the equation above yields:
 
 
-$$ m_{flowdown} = V_{flowdown}[\rho_{solution}(1-HCT_{flowdown})+\rho_{RBC}HCT_{whole\;blood}] $$
+$$ m_{flowdown} = V_{flowdown}[\rho_{solution}(1-HCT_{flowdown})+\rho_{RBC}HCT_{flowdown}] $$
 
 A simple rearrangement gives $V_{flowdown}$ in the following expression:
 
-$$ V_{flowdown} = \frac{m_{flowdown}}{\rho_{solution}(1-HCT_{plasma})+\rho_{RBC}HCT_{whole\;blood}} $$
-Now the Plasma and RBC recoveries can be calculated
-$$Plasma \; Recovery \;(\%)  = \frac{\nu_{plasma}V_{flowdown}(1-HCT_{flowdown})}{V_{PBS} + V_{whole\;blood}(1-HCT_{whole \;blood})}*100$$
+$$ V_{flowdown} = \frac{m_{flowdown}}{\rho_{solution}(1-HCT_{plasma})+\rho_{RBC}HCT_{flowdown}} $$
+Now the Plasma and RBC recoveries can be calculated. The plasma recovery (simplified) is given by:
+$$Plasma \; Recovery \;(\%)  = \frac{V_{flowdown}(1-HCT_{flowdown})}{V_{PBS} + V_{whole\;blood}(1-HCT_{whole \;blood})}*100$$
 
 $$ RBC \; Recovery \;(\%) = \frac{V_{flowdown}HCT_{flowdown}}{V_{whole\;blood}HCT_{whole\;blood}}*100$$
-
-```{r plasma recovery}
+# RBC and plasma recovery
+```{r plasma and red cell recovery}
 Temp = 23 #C
 rho_PBS <- -5.2037e-6*Temp^2 - 8.1463e-6*Temp + 1.0097 
 # I got this correlation from
@@ -70,67 +72,51 @@ spins[is.na(spins$HCT_plas),]$VFlowdown <- spins[is.na(spins$HCT_plas),]$gplas_t
 # Some disks have missing HCT_plasma values. For these disks, I approximate the density of the
 # flowdown as that of pure plasma. This lets me keep these data with little introduced error.
 
-spins$RBCRecovery    <- with(spins,{VFlowdown*VolFracPlasma*HCT_plas/(VolWB*HCT)*100})
+spins$RBCRecovery    <- with(spins,{VFlowdown*HCT_plas/(VolWB*HCT)*100})
 spins$PlasmaRecovery <- with(spins,{VFlowdown*(1-HCT_plas)/(VolPBS+VolWB*(1-HCT))*100})
 ```
 
-
-
-
-```{r plasma recovery for disks with 8 ruffles vs 16 ruffles}
-Nruffles <- subset(spins,grepl('20.05_[0-9]{1,2}x3[long]{0,4}',spins$Disk) &
-                     HCT<=0.55 &
-                     Trough.Volume == 4 &
-                     !grepl('peo',spins$Disk) &
-                     !grepl('mm',spins$Disk))
-ggplot(Nruffles,aes(HCT,PlasmaRecovery,color=Disk))+geom_point()
-ggplot(Nruffles,aes(HCT,VFlowdown,color=Disk))+geom_point()
-
-```
-
-```{r contrast function}
-# kind solution provided here: https://stackoverflow.com/questions/24515892/r-how-to-contrast-code-factors-and-retain-meaningful-labels-in-output-summary
-named.contr.sum<-function(x, ...) {
-    if (is.factor(x)) {
-        x <- levels(x)
-    } else if (is.numeric(x) & length(x)==1L) {
-        stop("cannot create names with integer value. Pass factor levels")
-    }
-    x<-contr.sum(x, ...)
-    colnames(x) <- apply(x,2,function(x) 
-         paste(names(x[x>0]), names(x[x<0]), sep="-")
-    )
-    x
-}
-```
-
-
-
 ```{r Plotting, echo=FALSE}
+# Make themes and grouping categories for easier visualization
 Disk_axis_theme <- theme(axis.text.x = element_text(angle=45,hjust=1))
 wb_colors <- scale_color_gradient2(low="yellow", mid='red', high="Darkred",midpoint=0.5)
 plas_colors <- scale_color_gradient2(low="yellow", mid='pink', high="Darkred",midpoint=0.025,limits=c(0,0.1))
 
+spins$DiskType <- spins$Disk
+levels(spins$DiskType) <- with(spins,sapply(
+                                list(
+                                  Ruffles = Disk[Ruffles&!Wells|Disk %in% c('matte_20.05','matte_70.05')],
+                                  Baffles = Disk[Baffles],
+                                  Wells   = Disk[Wells],
+                                  Moat = c('Moat','Moat2') %>% factor(),
+                                  Base = c('base','base_2mm_weir','matte_12H') %>% factor()),
+                                function(x){
+                                  x %>% droplevels() %>% levels()
+                                }))
 
-ggplot(spins,aes(Disk,PlasmaRecovery,color=Glossy))+
-  geom_jitter(width=0.05,na.rm=TRUE)+
+
+ggplot(spins,aes(Disk,PlasmaRecovery,color=DiskType,shape=Glossy))+
+  geom_jitter(width=0.1,na.rm=TRUE)+
+  scale_shape_manual(values=c(1,19))+
   Disk_axis_theme +
   ggtitle('Plasma recovery (%)')
 
-ggplot(spins,aes(Disk,RBCRecovery,color=HCT,shape=Glossy))+
-  geom_jitter(width=0.05,na.rm=TRUE)+
+ggplot(spins,aes(HCT,RBCRecovery,color=DiskType))+
+  geom_point(na.rm=TRUE)+
+  scale_shape_manual(values=c(19,1))+
+  facet_wrap(.~DiskType)+
   theme(axis.text.x = element_text(angle=45,hjust=1))+
-  ggtitle('RBC recovery (%)')+
-  wb_colors
+  ggtitle('RBC recovery (%)')
+  # wb_colors
 
-ggplot(spins,aes(Disk,gplas_tot,shape=Glossy,color=HCT_plas))+
+ggplot(spins,aes(Disk,VFlowdown,shape=Glossy,color=DiskType))+
   geom_jitter(width=0.05,na.rm=TRUE)+
   Disk_axis_theme+
-  ggtitle('Total mass of flowdown')+
+  ggtitle('Total volume of flowdown')+
   ylim(1.7,5)+
-  plas_colors
+  ylab('Flowdown volume (mL)')
+  # plas_colors 
 ```
-The reason most of the glossy disks have higher plasma recovery is because the flowdown is more predictable. With the matte ones, the same maximum flowdown is possible, but the rough surface presents an energy barrier, so a column of liquid with a given force has a lower chance of beating the threshold. 
 
 ```{r summary of spins, echo=FALSE}
 gplas.sum <- spins %>%
@@ -160,8 +146,15 @@ RBCRecovery.sum <- spins %>%
             ci_RBC = qt(0.975,nrr-1)*sd(RBCRecovery)/sqrt(nrr)
             )
 
-all.sum <- bind_cols(gplas.sum,select(PlasmaRecovery.sum,-Disk),select(RBCRecovery.sum,-c(Disk,nrr)))
+all.sum <- bind_cols(gplas.sum,
+                     dplyr::select(PlasmaRecovery.sum,-c(Disk)),
+                     dplyr::select(RBCRecovery.sum,-c(Disk,nrr))) %>%
+           # dplyr::select(.,-c(DiskType1,DiskType2)) %>%
+          .[with(.,order(-as.numeric(Disk),-PR)),]
+
 knitr::kable(all.sum,caption='Summary by disk')
+# htmlTable(cbind(data.frame(all.sum[,1]),txtRound(all.sum[,2:ncol(all.sum)],digits=c(0,1,2,0,1,1,1,1))))
+
 
 ggplot(all.sum,aes(reorder(Disk,PR,mean),Flowdown))+
   geom_point()+
@@ -178,6 +171,165 @@ ggplot(all.sum,aes(reorder(Disk,PR,mean),PR))+
 #   geom_errorbar(aes(ymin=RR-ci_RBC,ymax=RR+ci_RBC))
 
 ```
+
+```{r linear models for design features}
+features <- spins %>% dplyr::select(Disk,HCT,gplas_tot,RBCRecovery,PlasmaRecovery,Baffles,Glossy,Ruffles,Wells,LongWeir,DiskType)
+str(features)
+features.lm <- lm(PlasmaRecovery ~ Baffles*Glossy*Ruffles*Wells*LongWeir,data=features);summary(features.lm)
+termplot(features.lm,partial.resid = TRUE)
+
+pairs(features)
+```
+
+```{r collection time}
+collect<-spins %>% filter(Donor %in% c('Y','Z')) %>% droplevels()
+ggplot(collect,aes(CollectionDelaySeconds,PlasmaRecovery,color=factor(HCT)))+
+  geom_point()+
+  xlab('Collection delay time (s)')
+collect.lm <- lm(PlasmaRecovery~poly(CollectionDelaySeconds,2)+Donor,data=collect);summary(collect.lm)
+```
+
+# Specific disk comparisons
+
+```{r plasma recovery for disks with 8 ruffles vs 16 ruffles}
+Nruffles <- subset(spins,Ruffles==TRUE &
+                     HCT<=0.55 &
+                     Trough.Volume == 4 &
+                     !grepl('peo',spins$Disk) &
+                     !grepl('mm',spins$Disk))
+
+ggplot(Nruffles,aes(HCT,PlasmaRecovery,color=Disk))+geom_point()
+ggplot(Nruffles,aes(HCT,VFlowdown,color=Disk))+geom_point()
+
+```
+
+```{r glossy vs matte variances}
+spins %>%
+  group_by(Glossy,Disk) %>%
+  drop_na(VFlowdown) %>%
+  filter(VFlowdown>2) %>% # Remove one outlier from matte_70.05
+  summarise(nspins = n(),
+            Vol.mean = mean(VFlowdown),
+            Vol.var = sd(VFlowdown)^2,
+            SSWDisk = sum((VFlowdown-Vol.mean)^2)) %>%
+  summarise(nglossy = sum(nspins),
+            SSWGlossy = sum(SSWDisk)/nglossy)
+GM <- 0.02256/0.20121 # ratio of within-Disk nested within glossy MSE
+F975 <- qf(0.975,df1=128,df2=29)
+F975
+sqrt(GM/F975)
+sqrt(GM)
+sqrt(GM*F975)
+
+ggplot(spins,aes(sample=PlasmaRecovery,color=Glossy))+stat_qq()+facet_wrap(~Disk)
+
+```
+
+The reason most of the glossy disks have higher plasma recovery is because the flowdown is more predictable. With the matte ones, the same maximum flowdown is possible, but the rough surface presents an energy barrier, so a column of liquid with a given force has a lower chance of beating the threshold. 
+
+```{r Weir length}
+weir <- filter(spins, Disk %in% c('base','base_2mm_weir'))
+
+# compute difference in variance between weir widths.
+leveneTest(PlasmaRecovery~Disk,data=weir)
+weir %>% droplevels() %>% group_by(Disk) %>% summarise(n=n(),avg=mean(PlasmaRecovery),Var=sd(PlasmaRecovery)^2)
+
+weir.var <- 165.8/46.3
+F975 <- qf(0.975,df1=9,df2=12)
+sqrt(weir.var/F975)
+sqrt(weir.var)
+sqrt(weir.var*F975)
+
+t.test(PlasmaRecovery~Disk,data=weir)
+
+ggplot(weir,aes(Disk,PlasmaRecovery))+geom_jitter(width=0.05)
+```
+
+```{r multiple comparisons between disk types}
+temp <- spins %>% filter(!is.na(PlasmaRecovery),
+                         # Disk %in% c('20.05_16x3','20.05_8x3_1.25x7mm','16b'),
+                         Glossy==TRUE,
+                         !DiskType %in% c('Base','Moat'),
+                         !Disk %in% c('20.035_8x3_1.25x7mm','20.05_16x3_3mL','20.05_16x3_5mL')
+                         ) %>%
+                  droplevels()
+
+# Test for differences between disk types
+DiskType.aov <- aov(PlasmaRecovery~DiskType,data=temp);summary(DiskType.aov)
+TukeyHSD(DiskType.aov)
+plot(TukeyHSD(DiskType.aov))
+summary(glht(DiskType.aov))
+
+kruskal.test(PlasmaRecovery~DiskType,data=temp)
+
+# model assumption checking - normality and homoscedascity
+ggplot(temp,aes(DiskType,PlasmaRecovery))+geom_violin()+geom_point()
+ggplot(temp,aes(sample=PlasmaRecovery,color=DiskType))+stat_qq()+stat_qq_line()
+temp %>% group_by(DiskType) %>% summarise(n=n(),PR=mean(PlasmaRecovery),SD=sd(PlasmaRecovery))
+```
+
+```{r comparisons between best disks}
+best <- spins %>% filter(!is.na(PlasmaRecovery),Disk %in% c('20.05_16x3','20.05_8x3_1.25x7mm','16b')) %>% droplevels()
+
+
+ggplot(best,aes(HCT,RBCRecovery,color=Disk))+geom_point()
+best.lm <- lm(RBCRecovery~Disk*HCT,data=best %>% filter(RBCRecovery>0.5),contrasts = list(Disk='contr.sum'));summary(best.lm)
+Anova(best.lm,type=3)
+```
+
+```{r moat disk comparison}
+moat <- subset(spins,as.Date(Date)=='2019-4-16')
+moataov <- lm(PlasmaRecovery~Disk+Donor,data=moat)
+summary(moataov)
+ggplot(moat,aes(Disk,VFlowdown,color=as.factor(HCT)))+geom_point()
+ggplot(moat,aes(Disk,PlasmaRecovery,color=as.factor(HCT)))+geom_point()
+ggplot(moat,aes(Disk,RBCRecovery,color=as.factor(HCT)))+geom_jitter(width=0.05)+ylab('Red cell recovery (%)')
+```
+
+```{r disks with 8 ruffles}
+ruffles8 <- spins %>% filter(as.Date(Date)==as.Date('2019-4-9')) %>%
+                             dplyr::select(.,Disk,HCT,HCT_plas,PlasmaRecovery,VFlowdown)
+ruffles8$Donor <- c(1,1,1,1,1,1,2,2,2,2,2)
+
+short = c(7,3,4,7,8,4)
+long = c(8,8,8,8,3,8)
+donor = c(1,2,1,2,1,2,2,1,2,1,2,1)
+HCT = c(0.48,0.40,0.48,0.40,0.48,0.40,0.40,0.48,0.40,0.48,0.40,0.48)
+channels <- data.frame(Disk=gl(2,6,labels=c('8 normal','8 long')),
+                       Breakthrough_points=c(short,long),
+                       Donor=as.character(donor),
+                       HCT = factor(HCT))
+
+ggplot(channels,aes(Disk,Breakthrough_points,color=HCT))+
+  geom_jitter(width=0.1,height=0.,size=3)+
+  theme_minimal()
+
+ruffsum <- ruffles8 %>% group_by(Disk,Donor) %>% summarise(n=n(),SD=sd(VFlowdown))
+with(ruffsum,(n-1)*SD)
+```
+
+```{r round pools}
+roundpool <- spins[as.Date(spins$Date)>='2019-04-16',] # these experiments most happened over two days.  Select just two
+# look at contrasts - use helmert and drop extra disk factor levels
+ggplot(roundpool,aes(Disk,PlasmaRecovery,color=as.Date(Date),shape=Donor))+geom_point()+theme(axis.text.x = element_text(angle = 45, hjust=1))
+ggplot(roundpool,aes(Disk,bac_recovery,  color=as.Date(Date),shape=Donor))+geom_point()+theme(axis.text.x = element_text(angle = 45, hjust=1))
+
+roundpool$Disk <- droplevels(roundpool$Disk)
+contrasts(roundpool$Disk) <- 'contr.sum'
+summary(lm(bac_recovery~Disk+Donor,data=roundpool))
+
+```
+
+```{r 20.035 disk comparison}
+rufdep <- spins %>% filter(Date=='2019-5-29') %>% dplyr::select(.,1:7,11,12,'RBCRecovery','PlasmaRecovery') # |Disk=='base_2mm_weir'
+rufdep$Tube <- gl(6,2) #rep(1:6,each=2)
+ggplot(rufdep,aes(HCT,PlasmaRecovery,color=Disk,shape=Tube))+geom_jitter(width=0.001)
+ggplot(rufdep,aes(HCT,RBCRecovery,color=Disk,shape=Tube))+geom_jitter(width=0.001)
+wilcox.test(PlasmaRecovery~Disk,paired=T,data=rufdep)
+```
+The HCT threshold seems to have changed some
+
+
 dig through to find Masha plasma recovery
 # Effect of Hematocrit and trough volume
 ```{r RBC relationship to trough volume - plotting}
@@ -205,7 +357,7 @@ ggplot(ruffles,aes(Vol_Plasma2Trough,PlasmaRecovery))+
   theme(axis.text.x = element_text(angle=45,hjust=1))
 
 rufflesum <- ruffles %>%
-  select(.,HCT_Disk_calc,HCT,Disk) %>%
+  dplyr::select(.,HCT_Disk_calc,HCT,Disk) %>%
   na.omit() %>%
   group_by(Disk) %>% 
   summarise(n=n(),
@@ -223,16 +375,33 @@ ggplot(ruffles,aes(HCT,HCT_Disk_calc,color=factor(ruffles$RBCRecovery>0.7),shape
 trough <- filter(ruffles,Disk != '20.05_16x3_peo')
 ```
 
+```{r test effect of baffles on RR}
+baf4RR <- spins %>%
+  filter(HCT>0.41,Disk %in% c('base','16b','matte_20.05','matte_20.05_16b','matte_70.05','matte_70.05_16b')) %>%
+  filter(Disk %in% c('base','16b')) %>%
+  dplyr::select(c(Disk,HCT,RBCRecovery,Baffles)) %>%
+  droplevels() %>%
+  na.omit()
 
-```{r linear models}
-bloody <- filter(trough,RBCRecovery>0.75)
+
+baf4RR$Disk <- factor(baf4RR$Disk,levels=c('base','16b','matte_20.05','matte_20.05_16b','matte_70.05','matte_70.05_16b'))
+ggplot(baf4RR,aes(x=HCT,y=RBCRecovery,color=Baffles))+geom_jitter(width=0.001)
+# wilcox.test(RBCRecovery ~ Baffles,data=baf4RR)
+baf4RR.lm <- lm(RBCRecovery~HCT*Baffles,data=baf4RR);summary(baf4RR.lm)
+nrow(baf4RR)
+```
+Matte:
+70: p=0.1636 n=11
+20: p=0.2667 n=6
+base: p= 8.29e-5 n=22
+
+```{r linear models for trough overflow}
+bloody <- filter(trough,RBCRecovery>0.75) %>% droplevels(.$Disk)
 bloody.lm <- lm(HCT*100 ~ Disk/RBCRecovery-1,data=bloody)
 summary(bloody.lm)
-#trough.aov <- aov(Vol_RBC2Trough ~ Disk*RBCRecovery,data=trough);summary(trough.aov)
-bloody$Disk <- droplevels(bloody$Disk)
 
-#contrasts(bloody$Disk) <- contr.treatment(n=3,base = 1)
-bloody.lm <- lm(100*HCT~RBCRecovery*Disk,data=bloody)
+contrasts(bloody$Disk) <- contr.treatment(n=3,base = 2)
+bloody.lm <- lm(RBCRecovery~HCT*Disk,data=bloody)
 summary(bloody.lm)
 
 newdata = with(trough,
@@ -241,64 +410,31 @@ newdata = with(trough,
 
 trough$HCT_pred <- predict.lm(bloody.lm,newdata)
 
+# get confidence intervals from linear model
+confint(bloody.lm)-coef(bloody.lm)
+
 ggplot(trough,aes(HCT,RBCRecovery,color=Disk))+
   geom_point(na.rm=TRUE)+
   geom_line(aes(HCT_pred/100,RBCRecovery,color=Disk))
+
+
 ``` 
 The threshold ratio of Red cells to trough volume is not constant for the different trough volumes. I think that the 5mL tubes maybe relax more as the cells descend. 
 
 No correlation between "trough volume" and plasma recovery.
 Adding the volume of stuck flowdown doesn't change the disk hematocrit hardly at all.
 
-### Comparison of Trough hematocrit calculation to experimental
+## Comparison of Trough hematocrit calculation to experimental
 The calcuated "Trough hematocrits" for 2 experiments on 20.05_16x3_5mL was `r filter(spins,as.Date(Date)=='2018-08-21', Tube==1)$HCT_Disk_calc*100 %>% round(.,3)`, `r filter(spins,as.Date(Date)=='2018-08-21', Tube==5)$HCT_Disk_calc*100 %>% round(.,3)`, and the measured values were 83 and 87. The calculated values are lower probably because it considers the whole disk as the trough; in reality, the red cells are more concentrated in the trough than in the flowdown region.
 
-_Even though all the disks spill over near t
 
+# Effect of spin time
+```{r effect of spin time}
+raw.times <- read.xlsx2("G:/Documents/MS-Thesis-Pitt/Data-analysis/Spinning.xlsx",
+                    sheetIndex = 3,
+                    colClasses = NA)
+times <- raw.times %>% dplyr::select(.,Donor,Hold_time,gplas_tot,conc_recovery,bac_recovery,plas.plater)
+ggplot(times,aes(Hold_time,gplas_tot,color=Donor))+geom_point()
+evap.lm <- lm(gplas_tot~Hold_time+Donor,data=times);summary(evap.lm)
 
-```{r round pools}
-roundpool <- spins[as.Date(spins$Date)>='2019-04-16',] # these experiments most happened over two days.  Select just two
-# look at contrasts - use helmert and drop extra disk factor levels
-ggplot(roundpool,aes(Disk,PlasmaRecovery,color=as.Date(Date),shape=Donor))+geom_point()+theme(axis.text.x = element_text(angle = 45, hjust=1))
-ggplot(roundpool,aes(Disk,bac_recovery,  color=as.Date(Date),shape=Donor))+geom_point()+theme(axis.text.x = element_text(angle = 45, hjust=1))
-
-roundpool$Disk <- droplevels(roundpool$Disk)
-contrasts(roundpool$Disk) <- 'contr.sum'
-summary(lm(bac_recovery~Disk+Donor,data=roundpool))
-
-```
-```{r 20.035 disk comparison}
-rufdep <- spins %>% filter(Date=='2019-5-29') %>% select(.,1:7,11,12,'RBCRecovery','PlasmaRecovery')
-rufdep$Tube <- gl(6,2) #rep(1:6,each=2)
-ggplot(rufdep,aes(HCT,PlasmaRecovery,color=Disk,shape=Tube))+geom_jitter(width=0.001)
-ggplot(rufdep,aes(HCT,RBCRecovery,color=Disk,shape=Tube))+geom_jitter(width=0.001)
-wilcox.test(PlasmaRecovery~Disk,paired=T,data=rufdep)
-```
-The HCT threshold seems to have changed some
-
-```{r moat disk comparison}
-moat <- subset(spins,as.Date(Date)=='2019-4-16')
-moataov <- lm(PlasmaRecovery~Disk+Donor,data=moat)
-summary(moataov)
-ggplot(moat,aes(Disk,VFlowdown,color=as.factor(HCT)))+geom_point()
-ggplot(moat,aes(Disk,PlasmaRecovery,color=as.factor(HCT)))+geom_point()
-ggplot(moat,aes(Disk,RBCRecovery,color=as.factor(HCT)))+geom_jitter(width=0.05)+ylab('Red cell recovery (%)')
-```
-
-```{r disks with 8 ruffles}
-ruffles8 <- spins %>% filter(as.Date(Date)==as.Date('2019-4-9')) %>%
-                             select(.,Disk,PlasmaRecovery,HCT_plas,VFlowdown)
-ruffles8$Donor <- c(1,1,1,1,1,1,2,2,2,2,2)
-
-short = c(7,3,4,7,8,4)
-long = c(8,8,8,8,3,8)
-donor = c(1,2,1,2,1,2,2,1,2,1,2,1)
-channels <- data.frame(Disk=gl(2,6,labels=c('8 normal','8 long')),Breakthrough_points=c(short,long),Donor=as.character(donor))
-
-ggplot(channels,aes(Disk,Breakthrough_points,color=Donor,size=5))+geom_jitter(width=0.05)+theme_minimal()
-
-ruffsum <- ruffles8 %>% group_by(Disk,Donor) %>% summarise(n=n(),SD=sd(VFlowdown))
-with(ruffsum,(n-1)*SD)
-# Pooled SD equation
-# lapply( split(ruffsum,ruffsum$Donor),function(dd) sqrt( sum(dd$SD^2 *(dd$n-1))/(sum(dd$n-1)-nrow(dd)) ))
 ```

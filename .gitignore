@@ -10,3 +10,4 @@ Data-analysis/Spin Time/H*/
 *.MOV
 *.jpg
 *.Rhistory
+.Rproj.user

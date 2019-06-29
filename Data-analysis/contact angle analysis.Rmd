@@ -21,15 +21,16 @@ A model was fitted to consider the effects of (1) Drop location, (2) Liquid, and
 
 ```{r Data importing and manipulating}
 
-raw <- read.xlsx2('C:/Users/cdhig/Documents/MS-Thesis-Pitt/Data-analysis/contact angles.xlsx',sheetIndex=1,colClasses = NA)
-printed <- raw[raw$Finish!='PP',]
-ggplot(printed,aes(x=Location,y=avg))+geom_point()+facet_grid(Liquid ~ Treatment)
+CAraw <- read.xlsx2('G:/Documents/MS-Thesis-Pitt/Data-analysis/contact angles.xlsx',sheetIndex=1,colClasses = NA)
+CAraw$Date <- as.Date(CAraw$Date)
+printed <- CAraw[CAraw$Finish!='PP',]
+ggplot(CAraw,aes(x=Treatment,y=avg,color=Liquid))+geom_point()+facet_grid(Finish~.)
 
 # Duplicate treatment for more descriptive factor name
-raw$CoatingType <- raw$Treatment 
+CAraw$CoatingType <- CAraw$Treatment 
 
 # Collapse the factor levels into the type of treatment
-levels(raw$CoatingType) <- list(plasma=c('blown3min.1', 'blown3min.2',
+levels(CAraw$CoatingType) <- list(plasma=c('blown3min.1', 'blown3min.2',
                                          'quick.dry', 'plas_coated'),
                                 clean= c('as is', 'clean', 'etoh_ace', 'washed',
                                          'wiped', 'wiped_etoh_ace', 'wiped_water'),
@@ -37,14 +38,15 @@ levels(raw$CoatingType) <- list(plasma=c('blown3min.1', 'blown3min.2',
                                 support=c('support'))
 
 # Remove unwanted factor levels
-TreatmentSum <- filter(raw,!Treatment %in% c('as is',  'paa', 'support', 'washed', 'wiped_water') &
-                         !Finish %in% c('glass','matte') &
-                          Time=='SS') %>%
-  select(.,Finish,Liquid,CoatingType,Treatment,avg) %>%
+TreatmentSum <- filter(CAraw,!Treatment %in% c('as is',  'paa', 'support', 'washed', 'wiped_water') &
+                         !Finish %in% c('glass') &
+                          Time=='SS' &
+                         !Liquid %in% c('.1plasma','.33plasma','.67plasma')) %>%
+  dplyr::select(.,Finish,Liquid,CoatingType,Treatment,avg) %>%
   droplevels()
 
 # summarize group means 
-CAtable <- TreatmentSum %>% group_by(Finish,Liquid,CoatingType) %>%
+CAtable <- TreatmentSum %>% group_by(Finish,Liquid,Treatment) %>%
   summarise(n=n(),
             Contact.Angle=mean(avg),
             SD = sd(avg),
@@ -60,44 +62,68 @@ CAtable
 
 ```
 
-```{r ANOVA stuff}
-drops <- raw
-drops$Location <- factor(drops$Location)
-drop.aov <- lm(avg ~ Location*Liquid*Treatment, data=drops)
 
-summary(drop.aov)
+### Dilution experiments
+```{r dilution experiments}
+# Get data for dilution experiments
+
+dil <- filter(CAraw,Date=='2019-06-18') %>% droplevels()
+levels(dil$Liquid) <- c(.1,.33,.67,0,1,10)
+dil$Liquid <- as.numeric(as.character(dil$Liquid))
+
+ggplot(dil,aes(Liquid,avg,color=Treatment,shape=Finish))+
+  geom_jitter(width=0.01)+
+  scale_shape_manual(values=c(19,1))+
+  xlab('Volume fraction plasma')+
+  ylab('Contact angle')+
+  theme_minimal()
+  # ggtitle('Contact angle in plasma-PBS dilutions')
+
+# continuous dilution levels
+dil.lm.a <- lm(avg~Liquid,data=filter(dil,Liquid>0, Finish=='glossy', Treatment=='quick.dry'));summary(dil.lm.a)
+dil.lm.i <- lm(avg~Treatment*Liquid,data=dil[dil$Liquid>0,]);summary(dil.lm.i)
+Anova(dil.lm.a,type=2)
+
+# Categorical dilution levels
+dil.lm.c <- lm(avg~Treatment+factor(Liquid)+Finish,data=dil[dil$Liquid>0,]);summary(dil.lm.c)
+
+# test for lack of fit:
+anova(dil.lm.c,dil.lm.a) # no sign of lack of fit
+
 ```
 
-None of the effects including 'Location' are significant, suggesting surface treatments were sufficiently homogeneous.
+
+**Analyses exclude pure PBS**
+Treating dilutions as categorical, Liquid is significant at p=0.01
+Treating dilutions on continuous scale, Liquid is significant (from ANOVA, type=2) at p=0.0020
+Lack of fit p=0.5128, so I can't say that a linear relationship is a bad one.
 
 
-```{r drop.aov assumptions}
-leveneTest(avg ~ Location*Liquid*Treatment,data=drops)
-plot(drop.aov,2)
-```  
 
 ## Plasma coating t-tests
-hi
+
 ```{r plasma coating t-tests}
-SS <- subset(raw,Time=='SS' & Finish=='glossy' & Treatment != 'paa')
+SS <- subset(CAraw,Time=='SS' & Finish=='glossy' & Treatment != 'paa')
 SS %>% 
   filter(.,Treatment!='clean'& Treatment != 'wiped',Liquid=='plasma') %>%
-  pairwise.t.test(.$avg,.$Treatment,data=.,pool.sd=FALSE,p.adj='bonf')
+  pairwise.t.test(.$avg,.$Treatment,data=.,pool.sd=TRUE,p.adj='bonf')
 ```
 
+```{r compare quick.dry matte vs glossy}
+QD <- CAraw %>% filter(Treatment=='quick.dry',Finish!='PP',Liquid=='plasma') %>% droplevels()
+with(QD,table(Finish,Liquid))
+t.test(avg~Finish,data=QD,var.equal=TRUE)
+ggplot(QD,aes(sample=avg))+stat_qq(aes(color=Finish))
+```
+
+
 ```{r PP coating tests}
-PP <- raw[raw$Finish=='PP',]
+PP <- CAraw[CAraw$Finish=='PP',]
 PP %>% group_by(Treatment,Liquid) %>% summarise(n=n(),Angle=mean(avg),SD=sd(avg),Conf95=SD/sqrt(n)*qt(0.95,df=n-1),'Cos'=cos(Angle*3.14159/180))
 ggplot(PP,aes(Treatment,avg,color=Liquid)) + geom_jitter(width=0.25)
 
 ```
 
-```{r coating on printed vs glossy}
-coatings <- subset(raw,Treatment %in% c('blown3min.1','blown3min.2','plas_coated','quick.dry'))
 
-ggplot(coatings,aes(Treatment,avg,color=Liquid))+geom_point() + facet_wrap(~Finish)
-```
 
-```{r wetting thoughts}
-SS %>% group_by(Treatment,Liquid) %>% summarise(n=n(),Angle=mean(avg),SD=sd(avg),Conf95=SD/sqrt(n)*qt(0.95,df=n-1),'Cos'=cos(Angle*3.14159/180))
-```
+

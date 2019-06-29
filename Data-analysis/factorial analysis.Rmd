@@ -5,57 +5,98 @@ output:
   html_notebook: default
 ---
 
+# $3^2$ factorial experiments analysis
 
-```{r load libraries and import data, echo=FALSE}
+```{r load libraries and import data, message=FALSE, warning=FALSE, include=FALSE}
 library(ggplot2)
 library(dplyr)
 library(xlsx)
 library(car)
 library(RcmdrMisc)
 library(pwr)
+```
 
+```{r import and process data}
 raw <- read.xlsx("G:/Documents/MS-Thesis-Pitt/Data-analysis/Spinning.xlsx",
                  sheetIndex = 2,
                  colClasses = NA)
 
-raw$BR <- raw$bac_recovery*100
-raw$logBR <- log(raw$BR)
 raw <- filter(raw,bac_recovery != is.na(bac_recovery)) #bac_recovery>0.2)
-raw$Hold_time.num <- raw$Hold_time-mean(raw$Hold_time)
-raw$HCT_diluted.num <- raw$HCT_diluted-mean(raw$HCT_diluted)
+raw$BR <- raw$bac_recovery*100
+raw$Vol_out2in <- 1-raw$HCT_diluted/100/.85
+raw$CR_trap <- raw$conc_recovery*raw$Vol_out2in
+
+raw$Hold_time.num <- raw$Hold_time
+raw$HCT_diluted.num <- raw$HCT_diluted
 raw$Hold_time <- factor(x=raw$Hold_time)#,ordered=TRUE)
 raw$HCT_diluted <- factor(x=raw$HCT_diluted)#,ordered=TRUE)
 
 
-# plot results
-raw.sum <- raw %>% 
+# calculate PR and RR <- pasted from "Spinning analysis.Rmd"
+Temp = 23 #C
+rho_PBS <- -5.2037e-6*Temp^2 - 8.1463e-6*Temp + 1.0097 
+# I got this correlation from
+# (http://www.sciencedirect.com/science/article/pii/S003991400400373X)
+
+raw$VolFracPlasma  <- with(raw,{VolWB*(1-HCT)/(VolWB*(1-HCT) + VolPBS)})
+raw$RhoSolution    <- with(raw,{(rho_PBS*VolPBS + 1.024*(1-HCT)*VolWB)/(VolPBS + (1-HCT)*VolWB)})
+raw$VFlowdown      <- with(raw,{gplas_tot/(RhoSolution*(1-HCT_plas)+1.093*HCT_plas)})
+
+raw$RR <- with(raw,{VFlowdown*HCT_plas/(VolWB*HCT)*100})
+raw$PR <- with(raw,{VFlowdown*(1-HCT_plas)/(VolPBS+VolWB*(1-HCT))*100})
+
+# subset data (with or without outliers from linear models. Make sure to justify each remove in comments)
+inliers <- raw[-c(11,39,41,21),]
+
+# summarize results
+raw.sum <- inliers %>% 
   group_by(HCT_diluted,Hold_time)  %>%
   summarise(n=n(),
-            BR.mean=mean(BR),
-            SD = sd(BR))
-
+            BR.mean = mean(BR),BR.sd = sd(BR),
+            PR.mean = mean(PR),PR.sd = sd(PR),
+            RR.mean = mean(RR),RR.sd = sd(RR))
 raw.sum
-ggplot(raw,aes(HCT_diluted,BR,color=Hold_time,shape=Donor))+geom_jitter(width=0.05)+ylim(ymin=0,ymax=100)
-ggplot(raw,aes(HCT_diluted,conc_recovery))+geom_point()+facet_grid(.~Hold_time)
-with(raw,plotMeans(BR,HCT_diluted,Hold_time,error.bars='conf.int'))
 ```
-Mashsa saw that plasma recovery was higher with short times.
+
+
+```{r Plotting bacteria recoveries}
+ggplot(raw,aes(HCT_diluted,BR,color=Hold_time,shape=Donor))+geom_jitter(width=0.05)+ylim(ymin=0,ymax=100)
+with(raw,plotMeans(BR,HCT_diluted,Hold_time,error.bars='conf.int'))
+
+ggplot(inliers,aes(Hold_time,conc_recovery,color=Donor))+geom_point()+facet_grid(.~HCT_diluted)
+ggplot(raw,aes(Hold_time.num,conc_recovery/Vol_out2in,color=Donor))+geom_point()+facet_grid(.~HCT_diluted)
+ggplot(inliers,aes(Hold_time,conc_recovery*Vol_out2in/0.85))+geom_point()+facet_grid(.~HCT_diluted)
+```
+
+```{r plot red cell recovery}
+ggplot(inliers,aes(HCT_diluted,RR,color=Hold_time,shape=Donor))+geom_jitter(width=0.05)
+```
+Red cell recovery decreases with   as the cell pack compresses
+
+```{r plot plasma recovery}
+ggplot(inliers,aes(HCT_diluted.num,PR,color=Hold_time,shape=Donor))+geom_jitter(width=1)
+ggplot(inliers,aes(HCT_diluted.num,VFlowdown,color=Hold_time,shape=Donor))+geom_jitter(width=1)
+ggplot(inliers,aes(VFlowdown,PR,color=Hold_time,shape=Donor))+geom_jitter(width=1)+facet_grid(.~HCT_diluted)
+```
+At H=5, time doesn't seem to matter. As hematocrit increases, Plasma recovery increases with time because the cell pack compresses more.
+
+Mashsa saw that plasma recovery was higher with short times. Potential reasons:
+> Matte disks do not dry as quickly
+> 
+
+At H=47, Plasma is undiluted, which increases the cost of trapped plasma.
+I need to revisit trough overflow for red cells. 
+
+#### Is it wettability or viscosity?
+ If wettability: Measure contact angle for dilutions of plasma-PBS
+ If Viscosity: interpolate plas and PBS visc.
+
 
 ```{r Linear models for BR}
-# play with factors
-contrasts(raw$Hold_time) <- 'contr.sum' #contr.treatment(n=3,base=2) #contr.sum(n=3)
-contrasts(raw$HCT_diluted) <- 'contr.sum' #contr.treatment(n=3,base=2) #contr.sum(n=3)
-contrasts(raw$Donor) <- 'contr.sum'
-
-# do linear model (with or without outliers)
-inliers <- raw[-c(11,39,41),]
-
-pairs(dplyr::select(inliers,c(Hold_time,HCT_diluted,BR,conc_recovery,gplas_tot)),
-      col=c('blue','green','red')[inliers$HCT_diluted])
-
+options(contrasts = c('contr.sum','contr.sum'))
 BR.lm.i <- lm(BR~Hold_time*HCT_diluted+Donor,data=inliers); summary(BR.lm.i)
-#BR.lm.a <- lm(BR~Hold_time+HCT_diluted+Donor,data=raw); summary(BR.lm.a)
-Anova(BR.lm.i,type='II')
+BR.lm.a <- lm(BR~Hold_time+HCT_diluted+Donor,data=raw); summary(BR.lm.a)
+Anova(BR.lm.i,type=2)
 ```
 
 
@@ -99,6 +140,13 @@ At high hematocrit,increasing hold time increases concentration recovery
  > More plasma backflow
 
 
+
+
+
+```{r Plot everything}
+pairs(dplyr::select(raw,c(Hold_time,HCT_diluted,BR,conc_recovery,VFlowdown,PR,RR)),
+      col = c('blue','green','red')[inliers$HCT_diluted])
+```
 
 
 

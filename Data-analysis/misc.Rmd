@@ -1,0 +1,45 @@
+---
+title: "Untitled"
+author: "Clifton Anderson"
+date: "June 17, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{python}
+from scipy.optimize import fsolve
+import numpy as np
+def Lsed(H=0.55):
+  VRBC = 8.5*H # cm3
+  htot = .555+.419+0.1 #cm
+  A = VRBC/htot
+  def quad(a,b,c):
+    return (-b+np.sqrt(b**2-4*a*c))/(2*a),(-b-np.sqrt(b**2-4*a*c))/(2*a)
+  return quad(1,2*6,-A)
+print(Lsed())
+```
+
+```{r contrast function}
+# kind solution provided here: https://stackoverflow.com/questions/24515892/r-how-to-contrast-code-factors-and-retain-meaningful-labels-in-output-summary
+named.contr.sum<-function(x, ...) {
+    if (is.factor(x)) {
+        x <- levels(x)
+    } else if (is.numeric(x) & length(x)==1L) {
+        stop("cannot create names with integer value. Pass factor levels")
+    }
+    x<-contr.sum(x, ...)
+    colnames(x) <- apply(x,2,function(x) 
+         paste(names(x[x>0]), names(x[x<0]), sep="-")
+    )
+    x
+}
+```
+
+
+```{r pooled SD equation}
+# Pooled SD equation
+# lapply( split(ruffsum,ruffsum$Donor),function(dd) sqrt( sum(dd$SD^2 *(dd$n-1))/(sum(dd$n-1)-nrow(dd)) ))
+```
