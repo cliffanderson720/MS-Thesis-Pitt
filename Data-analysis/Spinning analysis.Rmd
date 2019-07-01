@@ -9,16 +9,22 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 library(latex2exp)
 library(xlsx)
+library(car)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(multcomp)
 library(htmlTable)
-library(car)
+library(extrafont)
+## font_import()
+## loadfonts(device="win")       #Register fonts for Windows bitmap output
+## fonts()    #vector of font family names
+windowsFonts(A = windowsFont("Times New Roman"))                   
+
 ```
 
 ```{r Importing and manipulating data, echo=FALSE}
-spins <- read.xlsx2("G:/Documents/MS-Thesis-Pitt/Data-analysis/Spinning.xlsx",
+spins <- read.xlsx2("Spinning.xlsx",
                     sheetIndex = 1,
                     colClasses = NA)
 spins$Date <- as.Date(spins$Date)
@@ -81,6 +87,7 @@ spins$PlasmaRecovery <- with(spins,{VFlowdown*(1-HCT_plas)/(VolPBS+VolWB*(1-HCT)
 Disk_axis_theme <- theme(axis.text.x = element_text(angle=45,hjust=1))
 wb_colors <- scale_color_gradient2(low="yellow", mid='red', high="Darkred",midpoint=0.5)
 plas_colors <- scale_color_gradient2(low="yellow", mid='pink', high="Darkred",midpoint=0.025,limits=c(0,0.1))
+mytheme <- theme_classic()+theme(text=element_text(family="A", size=12))
 
 spins$DiskType <- spins$Disk
 levels(spins$DiskType) <- with(spins,sapply(
@@ -98,19 +105,24 @@ levels(spins$DiskType) <- with(spins,sapply(
 ggplot(spins,aes(Disk,PlasmaRecovery,color=DiskType,shape=Glossy))+
   geom_jitter(width=0.1,na.rm=TRUE)+
   scale_shape_manual(values=c(1,19))+
+  mytheme+
   Disk_axis_theme +
   ggtitle('Plasma recovery (%)')
+  
 
 ggplot(spins,aes(HCT,RBCRecovery,color=DiskType))+
   geom_point(na.rm=TRUE)+
   scale_shape_manual(values=c(19,1))+
   facet_wrap(.~DiskType)+
+  mytheme+
   theme(axis.text.x = element_text(angle=45,hjust=1))+
-  ggtitle('RBC recovery (%)')
+  ggtitle('RBC recovery (%)') 
+  
   # wb_colors
 
 ggplot(spins,aes(Disk,VFlowdown,shape=Glossy,color=DiskType))+
   geom_jitter(width=0.05,na.rm=TRUE)+
+  mytheme+
   Disk_axis_theme+
   ggtitle('Total volume of flowdown')+
   ylim(1.7,5)+
@@ -159,11 +171,13 @@ knitr::kable(all.sum,caption='Summary by disk')
 ggplot(all.sum,aes(reorder(Disk,PR,mean),Flowdown))+
   geom_point()+
   geom_errorbar(aes(ymin=Flowdown-ci_Flowdown,ymax=Flowdown+ci_Flowdown))+
+  mytheme+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ggplot(all.sum,aes(reorder(Disk,PR,mean),PR))+
   geom_point()+
   geom_errorbar(aes(ymin=PR-ci_Plasma,ymax=PR+ci_Plasma))+
+  mytheme+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # ggplot(all.sum,aes(reorder(Disk,PR,mean),RR))+
@@ -183,7 +197,7 @@ pairs(features)
 
 ```{r collection time}
 collect<-spins %>% filter(Donor %in% c('Y','Z')) %>% droplevels()
-ggplot(collect,aes(CollectionDelaySeconds,PlasmaRecovery,color=factor(HCT)))+
+ggplot(collect,aes(CollectionDelaySeconds,PlasmaRecovery,color=factor(HCT)))+ mytheme+ theme(legend.position = c(0.9,0.4))+
   geom_point()+
   xlab('Collection delay time (s)')
 collect.lm <- lm(PlasmaRecovery~poly(CollectionDelaySeconds,2)+Donor,data=collect);summary(collect.lm)
@@ -198,8 +212,8 @@ Nruffles <- subset(spins,Ruffles==TRUE &
                      !grepl('peo',spins$Disk) &
                      !grepl('mm',spins$Disk))
 
-ggplot(Nruffles,aes(HCT,PlasmaRecovery,color=Disk))+geom_point()
-ggplot(Nruffles,aes(HCT,VFlowdown,color=Disk))+geom_point()
+ggplot(Nruffles,aes(HCT,PlasmaRecovery,color=Disk))+mytheme+geom_point()
+ggplot(Nruffles,aes(HCT,VFlowdown,color=Disk))+mytheme+geom_point()+theme(legend.position = c(0.2,0.3))
 
 ```
 
@@ -221,7 +235,7 @@ sqrt(GM/F975)
 sqrt(GM)
 sqrt(GM*F975)
 
-ggplot(spins,aes(sample=PlasmaRecovery,color=Glossy))+stat_qq()+facet_wrap(~Disk)
+ggplot(spins,aes(sample=PlasmaRecovery,color=Glossy))+stat_qq()+facet_wrap(~Disk)+mytheme
 
 ```
 
@@ -242,7 +256,7 @@ sqrt(weir.var*F975)
 
 t.test(PlasmaRecovery~Disk,data=weir)
 
-ggplot(weir,aes(Disk,PlasmaRecovery))+geom_jitter(width=0.05)
+ggplot(weir,aes(Disk,PlasmaRecovery))+mytheme+geom_jitter(width=0.05)
 ```
 
 ```{r multiple comparisons between disk types}
@@ -257,14 +271,14 @@ temp <- spins %>% filter(!is.na(PlasmaRecovery),
 # Test for differences between disk types
 DiskType.aov <- aov(PlasmaRecovery~DiskType,data=temp);summary(DiskType.aov)
 TukeyHSD(DiskType.aov)
-plot(TukeyHSD(DiskType.aov))
+plot(TukeyHSD(DiskType.aov))+mytheme
 summary(glht(DiskType.aov))
 
 kruskal.test(PlasmaRecovery~DiskType,data=temp)
 
 # model assumption checking - normality and homoscedascity
-ggplot(temp,aes(DiskType,PlasmaRecovery))+geom_violin()+geom_point()
-ggplot(temp,aes(sample=PlasmaRecovery,color=DiskType))+stat_qq()+stat_qq_line()
+ggplot(temp,aes(DiskType,PlasmaRecovery))+mytheme+ geom_violin()+geom_point()
+ggplot(temp,aes(sample=PlasmaRecovery,color=DiskType))+mytheme+ stat_qq()+stat_qq_line()
 temp %>% group_by(DiskType) %>% summarise(n=n(),PR=mean(PlasmaRecovery),SD=sd(PlasmaRecovery))
 ```
 
@@ -272,7 +286,7 @@ temp %>% group_by(DiskType) %>% summarise(n=n(),PR=mean(PlasmaRecovery),SD=sd(Pl
 best <- spins %>% filter(!is.na(PlasmaRecovery),Disk %in% c('20.05_16x3','20.05_8x3_1.25x7mm','16b')) %>% droplevels()
 
 
-ggplot(best,aes(HCT,RBCRecovery,color=Disk))+geom_point()
+ggplot(best,aes(HCT,RBCRecovery,color=Disk))+mytheme+geom_point()+theme(legend.position = c(0.2,0.8))
 best.lm <- lm(RBCRecovery~Disk*HCT,data=best %>% filter(RBCRecovery>0.5),contrasts = list(Disk='contr.sum'));summary(best.lm)
 Anova(best.lm,type=3)
 ```
@@ -281,9 +295,9 @@ Anova(best.lm,type=3)
 moat <- subset(spins,as.Date(Date)=='2019-4-16')
 moataov <- lm(PlasmaRecovery~Disk+Donor,data=moat)
 summary(moataov)
-ggplot(moat,aes(Disk,VFlowdown,color=as.factor(HCT)))+geom_point()
-ggplot(moat,aes(Disk,PlasmaRecovery,color=as.factor(HCT)))+geom_point()
-ggplot(moat,aes(Disk,RBCRecovery,color=as.factor(HCT)))+geom_jitter(width=0.05)+ylab('Red cell recovery (%)')
+ggplot(moat,aes(Disk,VFlowdown,color=as.factor(HCT)))+mytheme+geom_point()+theme(legend.position = c(0.8,0.5))
+ggplot(moat,aes(Disk,PlasmaRecovery,color=as.factor(HCT)))+mytheme+geom_point()+theme(legend.position = c(0.8,0.9))
+ggplot(moat,aes(Disk,RBCRecovery,color=as.factor(HCT)))+mytheme+geom_jitter(width=0.05)+ylab('Red cell recovery (%)')+theme(legend.position = c(0.8,0.6))
 ```
 
 ```{r disks with 8 ruffles}
@@ -300,9 +314,8 @@ channels <- data.frame(Disk=gl(2,6,labels=c('8 normal','8 long')),
                        Donor=as.character(donor),
                        HCT = factor(HCT))
 
-ggplot(channels,aes(Disk,Breakthrough_points,color=HCT))+
-  geom_jitter(width=0.1,height=0.,size=3)+
-  theme_minimal()
+ggplot(channels,aes(Disk,Breakthrough_points,color=HCT))+mytheme+
+  geom_jitter(width=0.1,height=0.,size=3)
 
 ruffsum <- ruffles8 %>% group_by(Disk,Donor) %>% summarise(n=n(),SD=sd(VFlowdown))
 with(ruffsum,(n-1)*SD)
@@ -311,8 +324,8 @@ with(ruffsum,(n-1)*SD)
 ```{r round pools}
 roundpool <- spins[as.Date(spins$Date)>='2019-04-16',] # these experiments most happened over two days.  Select just two
 # look at contrasts - use helmert and drop extra disk factor levels
-ggplot(roundpool,aes(Disk,PlasmaRecovery,color=as.Date(Date),shape=Donor))+geom_point()+theme(axis.text.x = element_text(angle = 45, hjust=1))
-ggplot(roundpool,aes(Disk,bac_recovery,  color=as.Date(Date),shape=Donor))+geom_point()+theme(axis.text.x = element_text(angle = 45, hjust=1))
+ggplot(roundpool,aes(Disk,PlasmaRecovery,color=as.Date(Date),shape=Donor))+geom_point()+mytheme+ theme(axis.text.x = element_text(angle = 45, hjust=1))
+ggplot(roundpool,aes(Disk,bac_recovery,  color=as.Date(Date),shape=Donor))+mytheme+geom_point()+theme(axis.text.x = element_text(angle = 45, hjust=1))
 
 roundpool$Disk <- droplevels(roundpool$Disk)
 contrasts(roundpool$Disk) <- 'contr.sum'
@@ -323,12 +336,27 @@ summary(lm(bac_recovery~Disk+Donor,data=roundpool))
 ```{r 20.035 disk comparison}
 rufdep <- spins %>% filter(Date=='2019-5-29') %>% dplyr::select(.,1:7,11,12,'RBCRecovery','PlasmaRecovery') # |Disk=='base_2mm_weir'
 rufdep$Tube <- gl(6,2) #rep(1:6,each=2)
-ggplot(rufdep,aes(HCT,PlasmaRecovery,color=Disk,shape=Tube))+geom_jitter(width=0.001)
-ggplot(rufdep,aes(HCT,RBCRecovery,color=Disk,shape=Tube))+geom_jitter(width=0.001)
+ggplot(rufdep,aes(HCT,PlasmaRecovery,color=Disk,shape=Tube))+mytheme+ geom_jitter(width=0.001)
+ggplot(rufdep,aes(HCT,RBCRecovery,color=Disk,shape=Tube))+mytheme+geom_jitter(width=0.001)
 wilcox.test(PlasmaRecovery~Disk,paired=T,data=rufdep)
 ```
 The HCT threshold seems to have changed some
 
+```{r test effect of baffles on RR}
+baf4RR <- spins %>%
+  filter(HCT>0.41,Disk %in% c('base','16b','matte_20.05','matte_20.05_16b','matte_70.05','matte_70.05_16b')) %>%
+  filter(Disk %in% c('base','16b')) %>%
+  dplyr::select(c(Disk,HCT,RBCRecovery,Baffles)) %>%
+  droplevels() %>%
+  na.omit()
+
+
+baf4RR$Disk <- factor(baf4RR$Disk,levels=c('base','16b','matte_20.05','matte_20.05_16b','matte_70.05','matte_70.05_16b'))
+ggplot(baf4RR,aes(x=HCT,y=RBCRecovery,color=Baffles))+mytheme+geom_jitter(width=0.001)
+# wilcox.test(RBCRecovery ~ Baffles,data=baf4RR)
+baf4RR.lm <- lm(RBCRecovery~HCT*Baffles,data=baf4RR);summary(baf4RR.lm)
+nrow(baf4RR)
+```
 
 dig through to find Masha plasma recovery
 # Effect of Hematocrit and trough volume
@@ -348,11 +376,11 @@ spins$Vol_Plasma2Trough <- with(spins,{VolWB*(1-HCT/0.8)-Trough.Volume})
 
 ruffles <- spins %>% filter(.,grepl('16x3',Disk)) %>% droplevels()
 
-ggplot(ruffles,aes(Trough.Volume,Ordinate))+
+ggplot(ruffles,aes(Trough.Volume,Ordinate))+mytheme+
   geom_jitter(aes(color=Disk),width=0.05)+
   geom_smooth(method='lm',se=TRUE)
 
-ggplot(ruffles,aes(Vol_Plasma2Trough,PlasmaRecovery))+
+ggplot(ruffles,aes(Vol_Plasma2Trough,PlasmaRecovery))+mytheme+
   geom_point(aes(color=HCT,shape=Disk))+
   theme(axis.text.x = element_text(angle=45,hjust=1))
 
@@ -368,28 +396,14 @@ rufflesum <- ruffles %>%
            SE = SD/sqrt(n))
 rufflesum
 
-ggplot(ruffles,aes(HCT,HCT_Disk_calc,color=factor(ruffles$RBCRecovery>0.7),shape=Disk))+
+ggplot(ruffles,aes(HCT,HCT_Disk_calc,color=factor(ruffles$RBCRecovery>0.7),shape=Disk))+mytheme+
   geom_point()+
   ylim(NA,1)
 
-trough <- filter(ruffles,Disk != '20.05_16x3_peo')
+trough <- filter(ruffles,Disk != '20.05_16x3_peo') %>% droplevels()
 ```
 
-```{r test effect of baffles on RR}
-baf4RR <- spins %>%
-  filter(HCT>0.41,Disk %in% c('base','16b','matte_20.05','matte_20.05_16b','matte_70.05','matte_70.05_16b')) %>%
-  filter(Disk %in% c('base','16b')) %>%
-  dplyr::select(c(Disk,HCT,RBCRecovery,Baffles)) %>%
-  droplevels() %>%
-  na.omit()
 
-
-baf4RR$Disk <- factor(baf4RR$Disk,levels=c('base','16b','matte_20.05','matte_20.05_16b','matte_70.05','matte_70.05_16b'))
-ggplot(baf4RR,aes(x=HCT,y=RBCRecovery,color=Baffles))+geom_jitter(width=0.001)
-# wilcox.test(RBCRecovery ~ Baffles,data=baf4RR)
-baf4RR.lm <- lm(RBCRecovery~HCT*Baffles,data=baf4RR);summary(baf4RR.lm)
-nrow(baf4RR)
-```
 Matte:
 70: p=0.1636 n=11
 20: p=0.2667 n=6
@@ -397,23 +411,23 @@ base: p= 8.29e-5 n=22
 
 ```{r linear models for trough overflow}
 bloody <- filter(trough,RBCRecovery>0.75) %>% droplevels(.$Disk)
-bloody.lm <- lm(HCT*100 ~ Disk/RBCRecovery-1,data=bloody)
-summary(bloody.lm)
+# bloody.lm <- lm(HCT*100 ~ Disk/RBCRecovery-1,data=bloody)
+# summary(bloody.lm)
 
 contrasts(bloody$Disk) <- contr.treatment(n=3,base = 2)
 bloody.lm <- lm(RBCRecovery~HCT*Disk,data=bloody)
 summary(bloody.lm)
 
-newdata = with(trough,
+newdata = with(bloody,
                data.frame(RBCRecovery = RBCRecovery,
                           Disk = Disk))
 
-trough$HCT_pred <- predict.lm(bloody.lm,newdata)
+bloody$HCT_pred <- predict.lm(bloody.lm,newdata)
 
 # get confidence intervals from linear model
 confint(bloody.lm)-coef(bloody.lm)
 
-ggplot(trough,aes(HCT,RBCRecovery,color=Disk))+
+ggplot(bloody,aes(HCT,RBCRecovery,color=Disk))+mytheme+
   geom_point(na.rm=TRUE)+
   geom_line(aes(HCT_pred/100,RBCRecovery,color=Disk))
 
@@ -430,11 +444,11 @@ The calcuated "Trough hematocrits" for 2 experiments on 20.05_16x3_5mL was `r fi
 
 # Effect of spin time
 ```{r effect of spin time}
-raw.times <- read.xlsx2("G:/Documents/MS-Thesis-Pitt/Data-analysis/Spinning.xlsx",
+raw.times <- read.xlsx2("Spinning.xlsx",
                     sheetIndex = 3,
                     colClasses = NA)
 times <- raw.times %>% dplyr::select(.,Donor,Hold_time,gplas_tot,conc_recovery,bac_recovery,plas.plater)
-ggplot(times,aes(Hold_time,gplas_tot,color=Donor))+geom_point()
+ggplot(times,aes(Hold_time,gplas_tot,color=Donor))+mytheme+geom_point()
 evap.lm <- lm(gplas_tot~Hold_time+Donor,data=times);summary(evap.lm)
 
 ```

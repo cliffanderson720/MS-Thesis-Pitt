@@ -1,0 +1,29 @@
+---
+title: "R Notebook"
+output: html_notebook
+editor_options: 
+  chunk_output_type: console
+---
+```{r}
+install.packages("extrafont")
+library(extrafont)
+font_import()
+loadfonts(device="win")       #Register fonts for Windows bitmap output
+fonts()                       #vector of font family names
+
+windowsFonts(A = windowsFont("Times New Roman"))
+library(ggplot2)
+library(carData)
+attach(carData::Adler)
+str(Adler)
+```
+
+
+```{r}
+mytheme <- theme_classic()+theme(text=element_text(family="A", size=12))
+  
+ggplot(Adler,aes(instruction,rating,color=expectation))+
+  geom_jitter(width=0.05)+mytheme+theme(legend.position = c(0.8,0.9))
+  
+```
+
