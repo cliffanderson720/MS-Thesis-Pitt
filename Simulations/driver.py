@@ -140,6 +140,7 @@ class driver:
             anim = animation.FuncAnimation(fig, animate, frames=self.ntimes, interval=self.dt*1000*4.7)
             anim.save('sim.html') #,writer='pillow')
             plt.draw()
+            plt.show()
         else:
             raise Exception('plot_type must be a string with value "gif" or "snap"')
         return 
